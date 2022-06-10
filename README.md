@@ -1,6 +1,16 @@
 # eth2-validator-monitor
 > Forked from https://github.com/uijin/eth2-validator-monitor
 
+Checks a series of validators and notifies to Telegram if they are down
+
+Install dependencies:
+```bash
+python3 -m venv ENV
+source ENV/bin/activate
+pip install -r requirements.txt
+```
+
+## Config
 Rename `config-example.yaml` to `config.yaml`, modify configuration.
 ```
 TELEGRAM:
