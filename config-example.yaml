@@ -1,0 +1,8 @@
+
+TELEGRAM:
+  ACCESS_TOKEN: ""
+  WEBHOOK_URL: ""
+CHAT:
+  ID: 
+validator_url:
+- "https://beaconcha.in/dashboard/data/validators?validators=1,2"
