@@ -2,20 +2,20 @@ import telegram
 import logging
 import asyncio
 import signal
-import time
-import json
-import os
-import sys
 from threading import Event
 
 import validators
 import config
 
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
 validator_active = {}
+
+STATUS_LABELS = {
+    'active_online': '*ONLINE* 👍',
+    'active_offline': '*OFFLINE* 🔥'
+}
 
 # loop = asyncio.get_event_loop()
 bot = telegram.Bot(
@@ -49,30 +49,23 @@ async def main():
 
 
     while not exit.is_set():
-        # for url in validator_url:
-        #     res = requests.get(url)
-        #     try:
-        #         res_json = res.json()
-        #     except json.decoder.JSONDecodeError:
-        #         log.exception(res.text)
-        #         continue
-        #     try:
-        #         for data in res_json['data']:
-        #             log.info('%s, %s',data[1], data[3])
-        #             index = data[1] # == k
-        #             state = data[3]
-        #             if (state == 'active_online') == validator_active.get(index, True):
-        #                 continue
-        #             message = f'<b>{index}</b> change to {state}'
-        #             message = message.replace('active_online', 'active_online👍')
-        #             message = message.replace('active_offline', 'active_offline🗿')
-        #             await send_message(message, parse_mode='HTML')
-        #             validator_active[index] = not validator_active.get(index, True)
-        #     except IndexError:
-        #         log.exception(res.text)
-        #         continue
-        
-        exit.wait(5)
+        for validator_state in validators.get_validators_state(monitored_validators):
+            index = validator_state['index']
+            status = validator_state['status']
+            previous_status = validator_active.get(index, True)
+
+            if (status == 'active_online') == previous_status:
+                # No change in the status from last check
+                continue
+
+            # Change the status for the validator
+            validator_active[index] = not previous_status
+
+            # Notify the change
+            state_label = STATUS_LABELS[status] if status in STATUS_LABELS else status + '⁉️'
+            message = f'Validator *{index}* changed to {state_label}'
+            await send_message(message)        
+        exit.wait(60)
 
 
 async def say_goodbye():    
