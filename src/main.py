@@ -1,10 +1,7 @@
-import imp
 import telegram
 import logging
-import yaml
 import asyncio
 import signal
-import requests
 import time
 import json
 import os
@@ -48,7 +45,7 @@ async def main():
 
         monitored_validators = validators.get_validators()
         log.info('Monitoring %s validators: %s', len(monitored_validators), monitored_validators)
-        await send_message(f"Will keep an 👀 on {len(monitored_validators)} validators")
+        await send_message(f"Will keep an 👀 on `{len(monitored_validators)}` validators")
 
 
     while not exit.is_set():
