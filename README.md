@@ -5,11 +5,11 @@ Checks a series of validators and notifies to Telegram if they are down
 
 # Docker
 ## Config
-Rename `config-example.yaml` to `config.yaml`, modify configuration.
+Rename `config-example.yml` to `config.yml`, modify configuration.
 
 ```bash
 docker build . -t eth2-monitor
-docker run -v $(pwd)/config.yaml:/app/config.yaml eth2-monitor
+docker run -v $(pwd)/config.yml:/app/config.yml eth2-monitor
 ```
 
 To see the logs
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ```
 
 ## Config
-Rename `config-example.yaml` to `config.yaml`, modify configuration.
+Rename `config-example.yml` to `config.yml`, modify configuration.
 
 ```
 TELEGRAM:

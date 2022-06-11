@@ -12,7 +12,7 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
-with open('config.yaml', 'r') as f:
+with open('config.yml', 'r') as f:
     config = yaml.safe_load(f)
 
 validator_url = config['validator_url']
