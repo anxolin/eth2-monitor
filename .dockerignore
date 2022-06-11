@@ -1,3 +1,4 @@
 .*
 ENV
 README.md
+config.yaml

@@ -4,10 +4,12 @@ Checks a series of validators and notifies to Telegram if they are down
 > Forked from https://github.com/uijin/eth2-validator-monitor
 
 # Docker
+## Config
+Rename `config-example.yaml` to `config.yaml`, modify configuration.
 
 ```bash
 docker build . -t eth2-monitor
-docker run -d eth2-monitor
+docker run -v $(pwd)/config.yaml:/app/config.yaml eth2-monitor
 ```
 
 To see the logs
@@ -29,6 +31,7 @@ pip install -r requirements.txt
 
 ## Config
 Rename `config-example.yaml` to `config.yaml`, modify configuration.
+
 ```
 TELEGRAM:
   ACCESS_TOKEN: "{your bot access token}"
