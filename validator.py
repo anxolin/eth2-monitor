@@ -21,17 +21,23 @@ loop = asyncio.get_event_loop()
 bot = telegram.Bot(
     token=config['TELEGRAM']['ACCESS_TOKEN']
 )
+
+# Config
 chat_id = chat_id=config['CHAT']['ID']
+
+async def send_message(message, parse_mode='MarkdownV2'):
+    async with bot:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=message,
+            parse_mode=parse_mode
+        )
 
 async def main():
     async with bot:
         user = await bot.get_me()
         log.info('[%s] Telegram bot "%s" up', user.username, user.first_name)
-        await bot.send_message(
-            chat_id=chat_id,
-            text=f"☀️ Validator Monitor *RESTARTED*",
-            parse_mode='MarkdownV2'
-        )
+        await send_message(f"☀️ Validator Monitor *RESTARTED*")
 
 
     while True:
@@ -52,27 +58,22 @@ async def main():
         #             message = f'<b>{index}</b> change to {state}'
         #             message = message.replace('active_online', 'active_online👍')
         #             message = message.replace('active_offline', 'active_offline🗿')
-        #             bot.send_message(chat_id=config['CHAT']['ID'], text=message, parse_mode='HTML')
+        #             await send_message(message, parse_mode='HTML')
         #             validator_active[index] = not validator_active.get(index, True)
         #     except IndexError:
         #         log.exception(res.text)
         #         continue
-        # time.sleep(5)
         await asyncio.sleep(5)
 
-async def say_goodbye():
-    log.info("Have a good day Ser!")
+async def say_goodbye():    
     async with bot:
-        await bot.send_message(
-            chat_id=chat_id,
-            text=f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!",
-            parse_mode='MarkdownV2'
-        )
+        await send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
+    log.info("Have a good day Ser!")
 
 def stop():
     log.info("Shutting down")
     loop.run_until_complete(say_goodbye())
-    log.info("Shutdown complete ...")
+
 
 signal.signal(signal.SIGTERM, stop)
 
