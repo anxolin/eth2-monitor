@@ -1,6 +1,10 @@
 # ETH2 Monitor
 Checks a series of validators and notifies to Telegram if they are down
 
+<p align="center">
+  <img src="assets/telegram.jpg" />
+</p>
+
 > Inspired by https://github.com/uijin/eth2-validator-monitor
 
 # Quickstart
