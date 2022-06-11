@@ -6,4 +6,4 @@ COPY requirements.txt /app/
 RUN pip3 install -r /app/requirements.txt
 COPY . /app/
 
-CMD ["python3", "validator.py"]
+CMD ["python3", "src/main.py"]
