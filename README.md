@@ -1,8 +1,25 @@
-# eth2-validator-monitor
-> Forked from https://github.com/uijin/eth2-validator-monitor
-
+# ETH2 Monitor
 Checks a series of validators and notifies to Telegram if they are down
 
+> Forked from https://github.com/uijin/eth2-validator-monitor
+
+# Docker
+
+```bash
+docker build . -t eth2-monitor
+docker run -d eth2-monitor
+```
+
+To see the logs
+
+```bash
+# get the running CONTAINER ID
+docker ps
+
+docker logs -f <CONTAINER ID>
+```
+
+# Dev
 Install dependencies:
 ```bash
 python3 -m venv ENV
