@@ -4,3 +4,4 @@ services:
     build: .
     volumes:
       - ./config.yml:/app/config.yml
+      #- ./validator.py:/app/validator.py

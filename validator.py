@@ -8,6 +8,8 @@ import time
 import json
 import os
 import sys
+from threading import Event
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -18,10 +20,12 @@ with open('config.yml', 'r') as f:
 validator_url = config['validator_url']
 validator_active = {}
 
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
 bot = telegram.Bot(
     token=config['TELEGRAM']['ACCESS_TOKEN']
 )
+exit = Event()
+wait = None
 
 # Config
 chat_id = chat_id=config['CHAT']['ID']
@@ -35,13 +39,15 @@ async def send_message(message, parse_mode='MarkdownV2'):
         )
 
 async def main():
+    global wait
+
     async with bot:
         user = await bot.get_me()
         log.info('[%s] Telegram bot "%s" up', user.username, user.first_name)
         await send_message(f"☀️ Validator Monitor *RESTARTED*")
 
 
-    while True:
+    while not exit.is_set():
         # for url in validator_url:
         #     res = requests.get(url)
         #     try:
@@ -64,25 +70,27 @@ async def main():
         #     except IndexError:
         #         log.exception(res.text)
         #         continue
-        await asyncio.sleep(5)
+        
+        exit.wait(5)
+
 
 async def say_goodbye():    
     async with bot:
         await send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
     log.info("Have a good day Ser!")
 
-def stop():
-    log.info("Shutting down")
-    loop.run_until_complete(say_goodbye())
 
+def stop(signal_number=None, _stack=None):
+    log.info("Shutting down (Signal=%s)", signal_number)
+    exit.set()
 
-signal.signal(signal.SIGTERM, stop)
+if __name__ == '__main__':
+    for sig in ('TERM', 'HUP', 'INT'):
+        signal.signal(getattr(signal, 'SIG'+sig), stop)
 
-if __name__ == '__main__':        
     try:
-        loop.run_until_complete(main())
+        asyncio.run(main())
     except KeyboardInterrupt:  # pragma: no branch
         pass
     finally:
-        stop()
-        loop.close()
+        asyncio.run(say_goodbye())
