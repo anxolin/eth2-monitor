@@ -1,3 +1,4 @@
+import imp
 import telegram
 import logging
 import yaml
@@ -10,25 +11,24 @@ import os
 import sys
 from threading import Event
 
+import validators
+import config
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
-with open('config.yml', 'r') as f:
-    config = yaml.safe_load(f)
-
-validator_url = config['validator_url']
 validator_active = {}
 
 # loop = asyncio.get_event_loop()
 bot = telegram.Bot(
-    token=config['TELEGRAM']['ACCESS_TOKEN']
+    token=config.config['telegram']['access_token']
 )
 exit = Event()
 wait = None
 
 # Config
-chat_id = chat_id=config['CHAT']['ID']
+chat_id = chat_id=config.config['telegram']['channel_id']
 
 async def send_message(message, parse_mode='MarkdownV2'):
     async with bot:
@@ -45,6 +45,10 @@ async def main():
         user = await bot.get_me()
         log.info('[%s] Telegram bot "%s" up', user.username, user.first_name)
         await send_message(f"☀️ Validator Monitor *RESTARTED*")
+
+        monitored_validators = validators.get_validators()
+        log.info('Monitoring %s validators: %s', len(monitored_validators), monitored_validators)
+        await send_message(f"Will keep an 👀 on {len(monitored_validators)} validators")
 
 
     while not exit.is_set():
