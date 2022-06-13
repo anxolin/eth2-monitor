@@ -24,7 +24,7 @@ curl https://raw.githubusercontent.com/anxolin/eth2-monitor/main/config-example.
 curl https://raw.githubusercontent.com/anxolin/eth2-monitor/main/docker-compose-example.yml > docker-compose.yml
 ```
 
-Your `config.yml` should look like:
+Your `config.yml` looks like:
 
 ```yaml
 check_health:
@@ -83,72 +83,6 @@ In order to setup Telegram notifications, you will need to:
 - Add the bot to the channel
 - Use any of these methods to get the chat-id: <https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id>
 
+
 # Development
-
-## Setup project
-Fitst check out the code:
-```bash
-git clone https://github.com/anxolin/eth2-monitor
-```
-
-Then create a basic configuration
-
-```bash
-# Use the template to start your own configuration file
-cp config-example.yml config.yml
-```
-
-## Docker-compose
-The simplest way to run the project is using docker-compose.
-
-```bash
-# Start the bot
-docker-compose up -d
-
-# Check the logs
-docker-compose logs -f bot
-```
-
-## Docker build
-To build the image:
-
-```bash
-# Build image
-docker build . -t anxolin/eth2-monitor:latest
-
-# Run
-docker run -v $(pwd)/config.yml:/app/config.yml anxolin/eth2-monitor
-```
-
-To see the logs:
-
-```bash
-# get the running CONTAINER ID
-docker ps
-
-docker logs -f <CONTAINER ID>
-```
-
-To push image:
-```bash
-docker push anxolin/eth2-monitor:latest
-```
-
-## Python Development
-
-```bash
-# Setup virtual env
-python3 -m venv ENV
-source ENV/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run
-python src/main.py
-```
-
-## Format code
-```
-black src
-```
+See [Development](./development.md)
