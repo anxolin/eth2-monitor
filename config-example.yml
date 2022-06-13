@@ -8,9 +8,10 @@ beacon_chain:
   # Gnosis Chain
   #base_url: https://beacon.gnosischain.com
 
-telegram:
-  access_token: "your-access-token"
-  channel_id: -1000000000
+telegram: null
+# telegram:
+#   access_token: "your-access-token"
+#   channel_id: -1000000000
 
 validators:
   # Eth1 withdraw account (alternative way to specify the list of validators)

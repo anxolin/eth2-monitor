@@ -1,44 +1,35 @@
-import telegram
 import logging
 import asyncio
 import signal
 from threading import Event
-import validators
-import config
 import traceback
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-log = logging.getLogger(__name__)
-
-validator_active = {}
+import validators
+import messages
+import config
 
 STATUS_LABELS = {
     'active_online': '*ONLINE* 👍',
     'active_offline': '*OFFLINE* 🔥'
 }
 
-# loop = asyncio.get_event_loop()
-bot = telegram.Bot(
-    token=config.config['telegram']['access_token']
-)
+# State
+validator_active = {}
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__)
 exit = Event()
 wait = None
 
 # Config
-chat_id = chat_id=config.config['telegram']['channel_id']
 polling_wait = config.config['check_health']['polling_wait']
 
 
-async def send_message(message, parse_mode='MarkdownV2'):
-    async with bot:
-        await bot.send_message(
-            chat_id=chat_id,
-            text=message,
-            parse_mode=parse_mode
-        )
-
-
 async def updateState(monitored_validators):
+    log.info('Check and Update the state for Validators')
+
+    raise Exception("fake error!")
+
     for validator_state in validators.get_validators_state(monitored_validators):
         index = validator_state['index']
         status = validator_state['status']
@@ -54,22 +45,21 @@ async def updateState(monitored_validators):
         # Notify the change
         state_label = STATUS_LABELS[status] if status in STATUS_LABELS else status + '⁉️'
         message = f'Validator *{index}* changed to {state_label}'
-        await send_message(message)
+        await messages.send_message(message)
         
     
 async def main():
     global wait
 
-    async with bot:
-        user = await bot.get_me()
-        log.info('[%s] Telegram bot "%s" up', user.username, user.first_name)
-        await send_message(f"☀️ Validator Monitor *RESTARTED*")
+    user = await messages.get_user()
+    log.info('[%s] ETH2 Monitor "%s" is up', user.username, user.first_name)
+    await messages.send_message(f"☀️ Validator Monitor *RESTARTED*")
 
-        # Get all the monitoring validators
-        monitored_validators = validators.get_validators()
+    # Get all the monitoring validators
+    monitored_validators = validators.get_validators()
 
-        log.info('Monitoring %s validators: %s', len(monitored_validators), monitored_validators)
-        await send_message(f"Will keep an 👀 on `{len(monitored_validators)}` validators")
+    log.info('Monitoring %s validators: %s', len(monitored_validators), monitored_validators)
+    await messages.send_message(f"Will keep an 👀 on `{len(monitored_validators)}` validators")
 
 
     while not exit.is_set():
@@ -82,8 +72,7 @@ async def main():
 
 
 async def say_goodbye():    
-    async with bot:
-        await send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
+    await messages.send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
     log.info("Have a good day Ser!")
 
 
