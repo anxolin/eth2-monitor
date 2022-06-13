@@ -1,3 +1,5 @@
+from socket import timeout
+import backoff
 import telegram
 import logging
 import asyncio
@@ -18,6 +20,7 @@ else:
     bot = None    
 
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=10)
 async def send_message(message, parse_mode='MarkdownV2'):
     if bot is not None:
         async with bot:
@@ -29,6 +32,7 @@ async def send_message(message, parse_mode='MarkdownV2'):
     else:
         log.info(f'[Message] {message}')
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=10)
 async def get_user():
     if bot is not None:
         async with bot:

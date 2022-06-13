@@ -67,20 +67,25 @@ async def main():
             await updateState(monitored_validators)
             error_count = 0
         except Exception as e:
+            # Log errors, and notify if the errors have been happening for some consecutive runs
             error_count += 1
             log.error(traceback.format_exc())
             log.error(f'Error checking the state of validators (error_count={error_count}). Retrying in {polling_wait}s!')
 
             if error_count in error_count_notify_thresholds or error_count % error_count_max_notify_threshold == 0:
-                await messages.send_message(f'🔥 *ERROR*: The check has been failing for `{error_count}` times in a row! Cause: {repr(e)}')
+                try:
+                    await messages.send_message(f'🔥 *ERROR*: The check has been failing for `{error_count}` times in a row! Cause: {repr(e)}')
+                except Exception as e2:
+                    log.error(traceback.format_exc())
+                    log.error('Nested error. Error sending the Error message')
         finally:
             log.debug(f'Next check in {polling_wait} seconds')
             exit.wait(polling_wait)
 
 
-async def say_goodbye():    
-    await messages.send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
+async def say_goodbye():
     log.info("Have a good day Ser!")
+    await messages.send_message(f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!")
 
 
 def stop(signal_number=None, _stack=None):
