@@ -30,6 +30,15 @@ Your `config.yml` looks like:
 check_health:
   # Waiting time between health checks
   polling_wait: 60
+
+  # It will notify when the check fails by this numnber of times in a row. The highest will define the periodicity 
+  # after that number is reached
+  #
+  #   i.e  [15, 60, 1440], and assuming a polling_wait of 60 seconds
+  #       - Notify after 15 failures, so it will notify after 15min failing
+  #       - Notify after 60min
+  #       - Notify after 24h (and every 24h from this moment)
+  error_count_notify_thresholds: [15, 60, 1440]
   
 beacon_chain:
   # Ethereum
