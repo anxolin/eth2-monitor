@@ -15,6 +15,7 @@ STATUS_LABELS = {
 
 # State
 validator_active = {}
+error_count = 0
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -23,12 +24,11 @@ wait = None
 
 # Config
 polling_wait = config.config['check_health']['polling_wait']
-
+error_count_notify_thresholds = config.config['check_health']['error_count_notify_thresholds']
+error_count_max_notify_threshold = error_count_notify_thresholds[-1]
 
 async def updateState(monitored_validators):
     log.info('Check and Update the state for Validators')
-
-    raise Exception("fake error!")
 
     for validator_state in validators.get_validators_state(monitored_validators):
         index = validator_state['index']
@@ -49,7 +49,7 @@ async def updateState(monitored_validators):
         
     
 async def main():
-    global wait
+    global wait, error_count
 
     user = await messages.get_user()
     log.info('[%s] ETH2 Monitor "%s" is up', user.username, user.first_name)
@@ -65,9 +65,16 @@ async def main():
     while not exit.is_set():
         try:
             await updateState(monitored_validators)
+            error_count = 0
         except Exception as e:
-            log.error("Unhandled error\n", traceback.format_exc())           
+            error_count += 1
+            log.error(traceback.format_exc())
+            log.error(f'Error checking the state of validators (error_count={error_count}). Retrying in {polling_wait}s!')
+
+            if error_count in error_count_notify_thresholds or error_count % error_count_max_notify_threshold == 0:
+                await messages.send_message(f'🔥 *ERROR*: The check has been failing for `{error_count}` times in a row! Cause: {repr(e)}')
         finally:
+            log.debug(f'Next check in {polling_wait} seconds')
             exit.wait(polling_wait)
 
 
