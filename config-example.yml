@@ -1,3 +1,7 @@
+check_health:
+  # Waiting time between health checks
+  polling_wait: 60
+
 beacon_chain:
   # Ethereum
   base_url: https://beaconcha.in

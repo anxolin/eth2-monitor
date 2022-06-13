@@ -11,6 +11,10 @@ Checks a series of validators and notifies to Telegram if they are down
 Rename `config-example.yml` to `config.yml` and modify configuration.
 
 ```yaml
+check_health:
+  # Waiting time between health checks
+  polling_wait: 60
+  
 beacon_chain:
   # Ethereum
   base_url: https://beaconcha.in

@@ -26,6 +26,7 @@ wait = None
 
 # Config
 chat_id = chat_id=config.config['telegram']['channel_id']
+polling_wait = config.config['check_health']['polling_wait']
 
 
 async def send_message(message, parse_mode='MarkdownV2'):
@@ -77,7 +78,7 @@ async def main():
         except Exception as e:
             log.error("Unhandled error\n", traceback.format_exc())           
         finally:
-            exit.wait(60)
+            exit.wait(polling_wait)
 
 
 async def say_goodbye():    
