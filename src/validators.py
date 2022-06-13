@@ -6,6 +6,7 @@ import json
 import yaml
 import config
 import time
+import traceback
 
 BATCH_SIZE = 50
 
@@ -49,22 +50,27 @@ def get_validators_state(validators, sleep_time=0.2):
     for i in range(0, len(validators), BATCH_SIZE):
         batch = validators[i:i+BATCH_SIZE]
         validators_param = ",".join([str(index) for index in batch])
-        res = requests.get(f'{base_url}/dashboard/data/validators?validators={validators_param}')
-        res_json = res.json()        
+        try:
+            # Get the status for the validators
+            res = requests.get(f'{base_url}/dashboard/data/validators?validators={validators_param}')
+            res_json = res.json()        
 
-        for data in res_json['data']:
-            index = data[1]
-            status = data[3]
-            # log.info('Validator %s is %s', index, state)
-            
-            result.append({
-                'index': index,
-                'status': status
-            })
+            for data in res_json['data']:
+                index = data[1]
+                status = data[3]
+                # log.info('Validator %s is %s', index, state)
+                
+                result.append({
+                    'index': index,
+                    'status': status
+                })
 
-        # Prevent rate limits
-        time.sleep(sleep_time)
+            # Prevent rate limits
+            time.sleep(sleep_time)
+        except Exception as e:
+            log.error("Error getting info for validators: {validators_param}\n", traceback.format_exc())
     return result
+
 
 def main():
     validators_conf = config.config['validators']
