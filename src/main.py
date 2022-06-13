@@ -3,7 +3,6 @@ import logging
 import asyncio
 import signal
 from threading import Event
-
 import validators
 import config
 import traceback

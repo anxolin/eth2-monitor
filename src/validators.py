@@ -1,9 +1,6 @@
-from operator import le
 import logging
 import time
-import requests
-import json
-import yaml
+import api
 import config
 import time
 import traceback
@@ -15,9 +12,9 @@ base_url = config.config['beacon_chain']['base_url']
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 
+
 def get_validators_from_eth1_address(eth1_withdraw_account):
-    res = requests.get(f'{base_url}/api/v1/validator/eth1/{eth1_withdraw_account}')
-    res_json = res.json()
+    res_json = api.get_json(f'/validator/eth1/{eth1_withdraw_account}')
     return [ validator['validatorindex'] for validator in res_json['data']]
 
 
@@ -26,8 +23,7 @@ def get_validators_from_public_keys(public_keys):
     for i in range(0, len(public_keys), BATCH_SIZE):
         batch = public_keys[i:i+BATCH_SIZE]
         public_keys_params = ",".join([hex(pub) for pub in batch])
-        res = requests.get(f'{base_url}/api/v1/validator/{public_keys_params}')
-        res_json = res.json()
+        res_json = api.get_json(f'/validator/{public_keys_params}')
         validators_batch = [validator['validatorindex'] for validator in res_json["data"]]
         validators += validators_batch
     
@@ -52,8 +48,7 @@ def get_validators_state(validators, sleep_time=0.2):
         validators_param = ",".join([str(index) for index in batch])
         try:
             # Get the status for the validators
-            res = requests.get(f'{base_url}/dashboard/data/validators?validators={validators_param}')
-            res_json = res.json()        
+            res_json = api.get_json(f'/validators?validators={validators_param}', base_api='/dashboard/data')
 
             for data in res_json['data']:
                 index = data[1]
