@@ -113,7 +113,10 @@ docker-compose logs -f bot
 To build the image:
 
 ```bash
+# Build image
 docker build . -t anxolin/eth2-monitor:latest
+
+# Run
 docker run -v $(pwd)/config.yml:/app/config.yml anxolin/eth2-monitor
 ```
 
@@ -126,7 +129,12 @@ docker ps
 docker logs -f <CONTAINER ID>
 ```
 
-# Python Development
+To push image:
+```bash
+docker push anxolin/eth2-monitor:latest
+```
+
+## Python Development
 
 ```bash
 # Setup virtual env
@@ -138,4 +146,9 @@ pip install -r requirements.txt
 
 # Run
 python src/main.py
+```
+
+## Format code
+```
+black src
 ```
