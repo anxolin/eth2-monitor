@@ -4,4 +4,5 @@ services:
     build: .
     volumes:
       - ./config.yml:/app/config.yml
-      #- ./src/main.py:/app/src/main.py
+      # - ./src/main.py:/app/src/main.py
+    restart: always
