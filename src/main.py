@@ -30,8 +30,9 @@ error_count_max_notify_threshold = error_count_notify_thresholds[-1]
 
 
 async def updateState(monitored_validators):
-    log.info("Check and Update the state for Validators")
+    log.debug("Check and Update the state for Validators")
 
+    validators_change_state = {}
     for validator_state in validators.get_validators_state(monitored_validators):
         index = validator_state["index"]
         status = validator_state["status"]
@@ -42,14 +43,34 @@ async def updateState(monitored_validators):
             continue
 
         # Change the status for the validator
-        validator_active[index] = not previous_status
+        is_online = not previous_status
+        validator_active[index] = is_online
 
-        # Notify the change
-        state_label = (
-            STATUS_LABELS[status] if status in STATUS_LABELS else status + "⁉️"
+        # Get the label for the new state
+        new_state = STATUS_LABELS[status] if status in STATUS_LABELS else status + "⁉️"
+        if new_state not in validators_change_state:
+            validators_change_state[new_state] = []
+
+        # Append the validator the list of validator that changed to th
+        validators_change_state[new_state].append(index)
+
+    # Notify all the changes of state
+    for new_state, validators_index in validators_change_state.items():
+        validators_str = ", ".join([str(index) for index in validators_index])
+        validators_markdown = ", ".join(
+            [
+                "["
+                + str(index)
+                + "](https://beacon.gnosischain.com/validator/"
+                + str(index)
+                + ")"
+                for index in validators_index
+            ]
         )
-        message = f"Validator *{index}* changed to {state_label}"
-        await messages.send_message(message)
+        message_base = f"{len(validators_index)} Validators changed to {new_state}: "
+
+        log.info(message_base + validators_str)
+        await messages.send_message(message_base + validators_markdown)
 
 
 async def main():
