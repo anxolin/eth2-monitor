@@ -1,5 +1,10 @@
+from pathlib import Path
 import yaml
 
+CONFIG_FILE = "config.yml"
 
-with open("config.yml", "r") as f:
-    config = yaml.safe_load(f)
+if Path(CONFIG_FILE).exists():
+    with open(CONFIG_FILE, "r") as f:
+        config = yaml.safe_load(f)
+else:
+    raise Exception(f'The config file "{CONFIG_FILE}" is required')
