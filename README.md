@@ -28,9 +28,6 @@ Your `config.yml` looks like:
 
 ```yaml
 check_health:
-  # Waiting time between health checks
-  polling_wait: 60
-
   # It will notify when the check fails by this numnber of times in a row. The highest will define the periodicity 
   # after that number is reached
   #
@@ -39,6 +36,12 @@ check_health:
   #       - Notify after 60min
   #       - Notify after 24h (and every 24h from this moment)
   error_count_notify_thresholds: [15, 60, 1440]
+
+  # Waiting time between health checks
+  polling_wait: 60
+
+  # Delay between request of large lists (i.e. delay when quering validator states in batches)
+  batch_request_delay: 0.2
   
 beacon_chain:
   # Ethereum
@@ -50,7 +53,7 @@ beacon_chain:
 telegram: null
 # telegram:
 #   access_token: "your-access-token"
-#   channel_id: -1000000000
+#   chat_id: -1000000000
 
 validators:
   # Eth1 withdraw account (alternative way to specify the list of validators)

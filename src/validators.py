@@ -1,9 +1,9 @@
 import logging
-import time
-import api
+import requests
 import config
 import time
 import traceback
+import backoff
 
 BATCH_SIZE = 50
 
@@ -15,8 +15,18 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
+def get_validator_url(index):
+    return f"{base_url}/validator/{str(index)}"
+
+
+@backoff.on_exception(backoff.expo, Exception, max_time=120)
+def get_json(path, base_api="/api/v1"):
+    res = requests.get(f"{base_url}{base_api}{path}")
+    return res.json()
+
+
 def get_validators_from_eth1_address(eth1_withdraw_account):
-    res_json = api.get_json(f"/validator/eth1/{eth1_withdraw_account}")
+    res_json = get_json(f"/validator/eth1/{eth1_withdraw_account}")
     return [validator["validatorindex"] for validator in res_json["data"]]
 
 
@@ -25,7 +35,7 @@ def get_validators_from_public_keys(public_keys):
     for i in range(0, len(public_keys), BATCH_SIZE):
         batch = public_keys[i : i + BATCH_SIZE]
         public_keys_params = ",".join([hex(pub) for pub in batch])
-        res_json = api.get_json(f"/validator/{public_keys_params}")
+        res_json = get_json(f"/validator/{public_keys_params}")
         validators_batch = [
             validator["validatorindex"] for validator in res_json["data"]
         ]
@@ -35,15 +45,18 @@ def get_validators_from_public_keys(public_keys):
 
 
 def get_validators():
-    validators_conf = config.config["validators"]
-    eth1_withdraw_account = validators_conf["eth1_withdraw_account"]
+    validators_conf = config.config.get("validators", {})
+
+    # Get validators by withdraw address
+    eth1_withdraw_account = validators_conf.get("eth1_withdraw_account", None)
     validators1 = (
         get_validators_from_eth1_address(eth1_withdraw_account)
         if eth1_withdraw_account is not None
         else []
     )
 
-    public_keys = validators_conf["public_keys"]
+    # Get validators by public keys
+    public_keys = validators_conf.get("public_keys", [])
     validators2 = (
         get_validators_from_public_keys(public_keys) if public_keys is not None else []
     )
@@ -60,14 +73,14 @@ def get_validators():
     return result
 
 
-def get_validators_state(validators, sleep_time=0.2):
+def get_validators_state(validators, batch_request_delay=0.2):
     result = []
     for i in range(0, len(validators), BATCH_SIZE):
         batch = validators[i : i + BATCH_SIZE]
         validators_param = ",".join([str(index) for index in batch])
         try:
             # Get the status for the validators
-            res_json = api.get_json(
+            res_json = get_json(
                 f"/validators?validators={validators_param}", base_api="/dashboard/data"
             )
 
@@ -79,7 +92,7 @@ def get_validators_state(validators, sleep_time=0.2):
                 result.append({"index": index, "status": status})
 
             # Prevent rate limits
-            time.sleep(sleep_time)
+            time.sleep(batch_request_delay)
         except Exception as e:
             log.error(
                 "Error getting info for validators: {validators_param}\n",
@@ -89,6 +102,9 @@ def get_validators_state(validators, sleep_time=0.2):
 
 
 def main():
+    # validators = get_json(f"/validators/queue")
+    # print(f"Response:\n{validators}")
+
     validators_conf = config.config["validators"]
 
     eth1_withdraw_account = validators_conf["eth1_withdraw_account"]

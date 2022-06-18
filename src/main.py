@@ -7,12 +7,7 @@ import traceback
 import validators
 import messages
 import config
-
-STATUS_LABELS = {"active_online": "*ONLINE* 👍", "active_offline": "*OFFLINE* 🔥"}
-
-# State
-validator_active = {}
-error_count = 0
+import monitor
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -21,60 +16,31 @@ log = logging.getLogger(__name__)
 exit = Event()
 wait = None
 
-# Config
-polling_wait = config.config["check_health"]["polling_wait"]
-error_count_notify_thresholds = config.config["check_health"][
-    "error_count_notify_thresholds"
-]
-error_count_max_notify_threshold = error_count_notify_thresholds[-1]
+# State
+error_count = 0
 
 
-async def updateState(monitored_validators):
-    log.debug("Check and Update the state for Validators")
-
-    validators_change_state = {}
-    for validator_state in validators.get_validators_state(monitored_validators):
-        index = validator_state["index"]
-        status = validator_state["status"]
-        previous_status = validator_active.get(index, True)
-
-        if (status == "active_online") == previous_status:
-            # No change in the status from last check
-            continue
-
-        # Change the status for the validator
-        is_online = not previous_status
-        validator_active[index] = is_online
-
-        # Get the label for the new state
-        new_state = STATUS_LABELS[status] if status in STATUS_LABELS else status + "⁉️"
-        if new_state not in validators_change_state:
-            validators_change_state[new_state] = []
-
-        # Append the validator the list of validator that changed to th
-        validators_change_state[new_state].append(index)
-
-    # Notify all the changes of state
-    for new_state, validators_index in validators_change_state.items():
-        validators_str = ", ".join([str(index) for index in validators_index])
-        validators_markdown = ", ".join(
-            [
-                "["
-                + str(index)
-                + "](https://beacon.gnosischain.com/validator/"
-                + str(index)
-                + ")"
-                for index in validators_index
-            ]
-        )
-        message_base = f"{len(validators_index)} Validators changed to {new_state}: "
-
-        log.info(message_base + validators_str)
-        await messages.send_message(message_base + validators_markdown)
+# "check_health": {
+#     "error_count_notify_thresholds": [15, 60, 1440],
+#     "polling_wait": 60,
+#     "batch_request_delay": 0.2,
+# },
+# "beacon_chain": {"base_url: https://beacon.gnosischain.com"},
+# "telegram": None,
+# "validators": {"eth1_withdraw_account": None, "public_keys": []},
 
 
 async def main():
     global wait, error_count
+
+    # Config
+    check_health_config = config.config.get("check_health", {})
+    polling_wait = check_health_config.get("polling_wait", 60)
+    batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
+    error_count_notify_thresholds = check_health_config.get(
+        "error_count_notify_thresholds", [15, 60, 1440]
+    )
+    error_count_max_notify_threshold = error_count_notify_thresholds[-1]
 
     user = await messages.get_user()
     log.info('[%s] ETH2 Monitor "%s" is up', user.username, user.first_name)
@@ -89,10 +55,14 @@ async def main():
     await messages.send_message(
         f"Will keep an 👀 on `{len(monitored_validators)}` validators"
     )
+    validator_monitor = monitor.ValidatorMonitor(
+        monitored_validators, batch_request_delay
+    )
 
     while not exit.is_set():
         try:
-            await updateState(monitored_validators)
+            # Monitor validators
+            await validator_monitor.check()
             error_count = 0
         except Exception as e:
             # Log errors, and notify if the errors have been happening for some consecutive runs
