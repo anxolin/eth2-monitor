@@ -48,7 +48,10 @@ def get_validators():
         get_validators_from_public_keys(public_keys) if public_keys is not None else []
     )
 
-    return validators1 + validators2
+    # Return unique validators
+    unique_validators = set(validators1)
+    unique_validators.update(validators2)
+    return list(unique_validators)
 
 
 def get_validators_state(validators, sleep_time=0.2):
