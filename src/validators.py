@@ -51,7 +51,13 @@ def get_validators():
     # Return unique validators
     unique_validators = set(validators1)
     unique_validators.update(validators2)
-    return list(unique_validators)
+    result = list(unique_validators)
+
+    # Sort validators
+    #   There's no really a strong need to sort, but messages is nice the validators are sorted in the notifications
+    #   Make it easier to spot patterns
+    result.sort()
+    return result
 
 
 def get_validators_state(validators, sleep_time=0.2):
