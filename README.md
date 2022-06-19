@@ -2,7 +2,7 @@
 Checks a series of validators and notifies if they are down or if their effetiveness fall below a threshold.
 
 <p align="center">
-  <img src="assets/telegram.jpg" />
+  <img src="assets/telegram.png" />
 </p>
 
 On it's default configuration it will monitor a list of validators, and log their status and effectiveness. 
