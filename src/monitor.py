@@ -1,6 +1,7 @@
 import logging
 import validators
 import messages
+import prometheus
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -21,6 +22,7 @@ class ValidatorMonitor:
         self.monitored_validators = monitored_validators
         self.batch_request_delay = batch_request_delay
 
+    @prometheus.VALIDATOR_CHECK_TIME.time()
     async def check(self):
         log.debug("Check and Update the state for Validators")
 
