@@ -16,6 +16,11 @@ However, there's two additional features that can be enabled independently of ea
   * Reports the effectiveness of each validator
   * Reports many relevant metrics, like error counts, request, performance metrics, etc
 
+
+<p align="center">
+  <img src="assets/grafana.png" />
+</p>
+
 > Inspired by https://github.com/uijin/eth2-validator-monitor
 
 # Quickstart: Run the monitor
