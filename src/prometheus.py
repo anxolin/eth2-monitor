@@ -32,6 +32,16 @@ validators_total_gauge = Gauge(
     PREFIX + "validators_total", "Number of validators being monitored"
 )
 
+main_loop_errors_counter = Counter(
+    PREFIX + "main_loop_errors",
+    "Number of errors in the main loop",
+)
+
+main_loop_consecutive_errors_gauge = Gauge(
+    PREFIX + "main_loop_consecutive_errors",
+    "Number of consecutive errors are currently accumulated for the last main loop executions",
+)
+
 
 def start_http_server(port=8000):
     log.info(

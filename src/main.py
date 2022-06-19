@@ -86,6 +86,7 @@ async def main():
             error_count = 0
         except Exception as e:
             # Log errors, and notify if the errors have been happening for some consecutive runs
+            prometheus.main_loop_errors_counter.inc()
             error_count += 1
             log.error(traceback.format_exc())
             log.error(
@@ -104,6 +105,7 @@ async def main():
                     log.error(traceback.format_exc())
                     log.error("Nested error. Error sending the Error message")
         finally:
+            prometheus.main_loop_consecutive_errors_gauge.set(error_count)
             log.debug(f"Next check in {polling_wait} seconds")
             exit.wait(polling_wait)
 
