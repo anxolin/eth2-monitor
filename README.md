@@ -84,6 +84,8 @@ services:
     ports:
       # Expose Prometheus metrics (you need to also enable them in the config)
       - "8000:8000"
+    environment:
+      - LOGLEVEL=INFO
     volumes:
       - ./config.yml:/app/config.yml
     restart: always

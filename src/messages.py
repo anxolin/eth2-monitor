@@ -1,17 +1,13 @@
 from os import access
 import backoff
 import telegram
-import logging
 import asyncio
-import config
+import utils
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-log = logging.getLogger(__name__)
+log = utils.getLog(__name__)
 
 # Config
-telegram_config = config.config.get("telegram", None)
+telegram_config = utils.config.get("telegram", None)
 if telegram_config is not None:
     access_token = telegram_config.get("access_token", None)
     chat_id = telegram_config["chat_id"]

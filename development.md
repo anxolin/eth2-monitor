@@ -22,6 +22,9 @@ docker-compose up -d
 
 # Check the logs
 docker-compose logs -f bot
+
+# To rebuild the image
+docker-compose build
 ```
 
 ## Docker build
@@ -61,6 +64,9 @@ pip install -r requirements.txt
 
 # Run
 python src/main.py
+
+# Change the log level
+LOGLEVEL=DEBUG python src/main.py
 ```
 
 ## Format code

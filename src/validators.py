@@ -1,18 +1,17 @@
-import logging
 import requests
-import config
+import utils
 import time
 import traceback
 import backoff
 
 BATCH_SIZE = 50
 
-base_url = config.config["beacon_chain"]["base_url"]
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+# Config: Beacon chain base url
+base_url = utils.config.get("beacon_chain", {}).get(
+    "base_url", "https://beacon.gnosischain.com"
 )
-log = logging.getLogger(__name__)
+
+log = utils.getLog(__name__)
 
 
 def get_validator_url(index):
@@ -45,7 +44,7 @@ def get_validators_from_public_keys(public_keys):
 
 
 def get_validators():
-    validators_conf = config.config.get("validators", {})
+    validators_conf = utils.config.get("validators", {})
 
     # Get validators by withdraw address
     eth1_withdraw_account = validators_conf.get("eth1_withdraw_account", None)
@@ -105,7 +104,7 @@ def main():
     # validators = get_json(f"/validators/queue")
     # print(f"Response:\n{validators}")
 
-    validators_conf = config.config["validators"]
+    validators_conf = utils.config["validators"]
 
     eth1_withdraw_account = validators_conf["eth1_withdraw_account"]
     if eth1_withdraw_account is not None:

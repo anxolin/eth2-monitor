@@ -1,4 +1,3 @@
-import logging
 import asyncio
 import signal
 from threading import Event
@@ -6,14 +5,11 @@ import traceback
 
 import validators
 import messages
-import config
+import utils
 import monitor
 import prometheus
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-log = logging.getLogger(__name__)
+log = utils.getLog(__name__)
 exit = Event()
 wait = None
 
@@ -35,7 +31,7 @@ async def main():
     global wait, error_count
 
     # Config: Health check
-    check_health_config = config.config.get("check_health", {})
+    check_health_config = utils.config.get("check_health", {})
     polling_wait = check_health_config.get("polling_wait", 60)
     batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
     error_count_notify_thresholds = check_health_config.get(
@@ -44,7 +40,7 @@ async def main():
     error_count_max_notify_threshold = error_count_notify_thresholds[-1]
 
     # Config: Prometheus
-    prometheus_config = config.config.get("prometheus", None)
+    prometheus_config = utils.config.get("prometheus", None)
 
     # Greet
     user = await messages.get_user()

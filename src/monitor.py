@@ -1,12 +1,9 @@
-import logging
 import validators
 import messages
 import prometheus
+import utils
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-log = logging.getLogger(__name__)
+log = utils.getLog(__name__)
 
 STATUS_LABELS = {"active_online": "*ONLINE* 👍", "active_offline": "*OFFLINE* 🔥"}
 
