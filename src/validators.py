@@ -3,6 +3,7 @@ import utils
 import time
 import traceback
 import backoff
+import prometheus
 
 BATCH_SIZE = 50
 
@@ -20,8 +21,13 @@ def get_validator_url(index):
 
 @backoff.on_exception(backoff.expo, Exception, max_time=120)
 def get_json(path, base_api="/api/v1"):
+    prometheus.bc_http_request_counter.inc()
+
     res = requests.get(f"{base_url}{base_api}{path}")
-    return res.json()
+    result = res.json()
+    prometheus.bc_http_request_success_counter.inc()
+
+    return result
 
 
 def get_validators_from_eth1_address(eth1_withdraw_account):

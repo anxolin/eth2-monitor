@@ -19,7 +19,7 @@ class ValidatorMonitor:
         self.monitored_validators = monitored_validators
         self.batch_request_delay = batch_request_delay
 
-    @prometheus.VALIDATOR_CHECK_TIME.time()
+    @prometheus.check_time_summary.time()
     async def check(self):
         log.debug("Check and Update the state for Validators")
 
