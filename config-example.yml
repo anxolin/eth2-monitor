@@ -1,4 +1,8 @@
 check_health:
+  # Notify if effectiveness falls bellow the theshold (null to disable effectiveness notifications)
+  # notify_effectiveness_threshold: null
+  notify_effectiveness_threshold: 0.66
+
   # It will notify when the check fails by this numnber of times in a row. The highest will define the periodicity 
   # after that number is reached
   #

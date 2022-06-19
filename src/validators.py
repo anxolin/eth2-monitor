@@ -5,8 +5,6 @@ import traceback
 import backoff
 import prometheus
 
-BATCH_SIZE = 50
-
 # Config: Beacon chain base url
 base_url = utils.config.get("beacon_chain", {}).get(
     "base_url", "https://beacon.gnosischain.com"
@@ -37,8 +35,7 @@ def get_validators_from_eth1_address(eth1_withdraw_account):
 
 def get_validators_from_public_keys(public_keys):
     validators = []
-    for i in range(0, len(public_keys), BATCH_SIZE):
-        batch = public_keys[i : i + BATCH_SIZE]
+    for batch in utils.divide_list_in_batches(public_keys):
         public_keys_params = ",".join([hex(pub) for pub in batch])
         res_json = get_json(f"/validator/{public_keys_params}")
         validators_batch = [
@@ -80,8 +77,7 @@ def get_validators():
 
 def get_validators_state(validators, batch_request_delay=0.2):
     result = []
-    for i in range(0, len(validators), BATCH_SIZE):
-        batch = validators[i : i + BATCH_SIZE]
+    for batch in utils.divide_list_in_batches(validators):
         validators_param = ",".join([str(index) for index in batch])
         try:
             # Get the status for the validators
@@ -100,9 +96,38 @@ def get_validators_state(validators, batch_request_delay=0.2):
             time.sleep(batch_request_delay)
         except Exception as e:
             log.error(
-                "Error getting info for validators: {validators_param}\n",
+                "Error getting validators state: {validators_param}\n",
                 traceback.format_exc(),
             )
+
+    return result
+
+
+def get_validators_effectiveness(validators, batch_request_delay=0.2):
+    result = []
+    for batch in utils.divide_list_in_batches(validators):
+        validators_param = ",".join([str(index) for index in batch])
+        try:
+            # Get the status for the validators
+            res_json = get_json(
+                f"/validator/{validators_param}/attestationeffectiveness"
+            )
+
+            for data in res_json["data"]:
+                index = data["validatorindex"]
+                effectiveness = data["attestation_effectiveness"]
+                # log.debug("Validator %s effectiveness is %s", index, effectiveness)
+
+                result.append({"index": index, "effectiveness": effectiveness})
+
+            # Prevent rate limits
+            time.sleep(batch_request_delay)
+        except Exception as e:
+            log.error(
+                "Error getting validators effectiveness: {validators_param}\n",
+                traceback.format_exc(),
+            )
+
     return result
 
 

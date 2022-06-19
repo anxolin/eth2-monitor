@@ -5,6 +5,7 @@ import yaml
 
 CONFIG_FILE = "config.yml"
 DEFAULT_LOG_LEVEL = os.environ.get("LOGLEVEL", "INFO")
+BATCH_SIZE = 50
 
 logging.basicConfig(
     level=os.environ.get("LOGLEVEL", "INFO"),
@@ -23,6 +24,11 @@ def getConfig():
 
 def getLog(name, level=DEFAULT_LOG_LEVEL):
     return logging.getLogger(name)
+
+
+def divide_list_in_batches(data, batch_size=BATCH_SIZE):
+    for i in range(0, len(data), batch_size):
+        yield data[i : i + batch_size]
 
 
 config = getConfig()

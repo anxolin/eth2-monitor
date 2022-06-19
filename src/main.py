@@ -34,6 +34,9 @@ async def main():
     check_health_config = utils.config.get("check_health", {})
     polling_wait = check_health_config.get("polling_wait", 60)
     batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
+    notify_effectiveness_threshold = check_health_config.get(
+        "notify_effectiveness_threshold", None
+    )
     error_count_notify_thresholds = check_health_config.get(
         "error_count_notify_thresholds", [15, 60, 1440]
     )
@@ -58,7 +61,9 @@ async def main():
         f"Will keep an 👀 on `{len(monitored_validators)}` validators"
     )
     validator_monitor = monitor.ValidatorMonitor(
-        monitored_validators, batch_request_delay
+        monitored_validators=monitored_validators,
+        notify_effectiveness_threshold=notify_effectiveness_threshold,
+        batch_request_delay=batch_request_delay,
     )
 
     # Start Prometheus server

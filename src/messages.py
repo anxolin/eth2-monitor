@@ -3,7 +3,6 @@ import backoff
 import telegram
 import asyncio
 import utils
-import prometheus
 
 log = utils.getLog(__name__)
 
@@ -17,7 +16,7 @@ def get_bot():
         access_token = telegram_config.get("access_token", None)
         chat_id = telegram_config["chat_id"]
         if access_token is not None and chat_id is not None:
-            return telegram.Bot(token=access_token)
+            return chat_id, telegram.Bot(token=access_token)
         else:
             log.warning(
                 'Telegram Notifications are disabled. Config the "telegram" requires both "access_token" and "chat_id"'
@@ -57,4 +56,4 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 
-bot = get_bot()
+chat_id, bot = get_bot()
