@@ -5,6 +5,7 @@ import utils
 
 log = utils.getLog(__name__)
 
+ONLINE_STATUS = "active_online"
 STATUS_LABELS = {"active_online": "*ONLINE* 👍", "active_offline": "*OFFLINE* 🔥"}
 EFFECTIVENESS_LABEL_OK = "*OK* 📈"
 EFFECTIVENESS_LABEL_KO = "*Critical* 🚨"
@@ -40,15 +41,17 @@ class ValidatorMonitor:
         for validator_state in validators_state:
             index = validator_state["index"]
             status = validator_state["status"]
-            previous_status = self.validators_online.get(index, True)
+            is_online = status == ONLINE_STATUS
+            prometheus.validator_up_gauge.labels(index=index).set(is_online)
 
-            if (status == "active_online") == previous_status:
+            # Check if there is a statutus change
+            previous_status = self.validators_online.get(index, ONLINE_STATUS)
+            if status == previous_status:
                 # No change in the status from last check
                 continue
 
             # Change the status for the validator
-            is_online = not previous_status
-            self.validators_online[index] = is_online
+            self.validators_online[index] = status
 
             # Get the label for the new state
             new_state = (
@@ -86,7 +89,9 @@ class ValidatorMonitor:
         for validator_effectiveness in validators_effectiveness:
             index = str(validator_effectiveness["index"])
             effectiveness = validator_effectiveness["effectiveness"]
-            prometheus.validator_effectiveness.labels(index=index).set(effectiveness)
+            prometheus.validator_effectiveness_gauge.labels(index=index).set(
+                effectiveness
+            )
 
             if notify:
                 previous_effectiveness_ok = self.validators_effectiveness_ok.get(
