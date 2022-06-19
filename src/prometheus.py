@@ -1,11 +1,18 @@
-from prometheus_client import start_http_server as start_server, Summary, Counter, Gauge
+from prometheus_client import (
+    start_http_server as start_server,
+    Summary,
+    Counter,
+    Gauge,
+    Info,
+)
 import utils
 
 log = utils.getLog(__name__)
 
 PREFIX = "eth2monitor_"
 
-# Create a metric to track time spent and requests made.
+config_info = Info(PREFIX + "config", "Config parameters")
+
 check_time_summary = Summary(
     PREFIX + "check_seconds",
     "Time it takes to check and report the state of all the validators in every run loop",

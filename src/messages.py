@@ -3,25 +3,30 @@ import backoff
 import telegram
 import asyncio
 import utils
+import prometheus
 
 log = utils.getLog(__name__)
 
-# Config
-telegram_config = utils.config.get("telegram", None)
-if telegram_config is not None:
-    access_token = telegram_config.get("access_token", None)
-    chat_id = telegram_config["chat_id"]
-    if access_token is not None and chat_id is not None:
-        bot = telegram.Bot(token=access_token)
+
+def get_bot():
+    # Config
+    telegram_config = utils.config.get("telegram", None)
+
+    # Create bot
+    if telegram_config is not None:
+        access_token = telegram_config.get("access_token", None)
+        chat_id = telegram_config["chat_id"]
+        if access_token is not None and chat_id is not None:
+            return telegram.Bot(token=access_token)
+        else:
+            log.warning(
+                'Telegram Notifications are disabled. Config the "telegram" requires both "access_token" and "chat_id"'
+            )
     else:
         log.warning(
-            'Telegram Notifications are disabled. Config the "telegram" requires both "access_token" and "chat_id"'
+            'Telegram Notifications are disabled. Config the "telegram" channel to enable them'
         )
-else:
-    log.warning(
-        'Telegram Notifications are disabled. Config the "telegram" channel to enable them'
-    )
-    bot = None
+    return None
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=10)
@@ -50,3 +55,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+bot = get_bot()

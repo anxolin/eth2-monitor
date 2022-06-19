@@ -63,6 +63,14 @@ async def main():
 
     # Start Prometheus server
     if prometheus_config is not None:
+        prometheus.config_info.info(
+            {
+                "beacon_chain_base_url": validators.base_url,
+                "telegram_notifications_enabled": "Yes"
+                if messages.bot is not None
+                else "No",
+            }
+        )
         prometheus_port = prometheus_config.get("port", None)
         prometheus.start_http_server(prometheus_port)
     else:
