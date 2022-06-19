@@ -1,9 +1,20 @@
 # ETH2 Monitor
-Checks a series of validators and notifies to Telegram if they are down
+Checks a series of validators and notifies if they are down or if their effetiveness fall below a threshold.
 
 <p align="center">
   <img src="assets/telegram.jpg" />
 </p>
+
+On it's default configuration it will monitor a list of validators, and log their status and effectiveness. 
+
+However, there's two additional features that can be enabled independently of each other:
+* **Telegram Notifications**: 
+  * Notifies every time one of the validators goes offline/online
+  * Notifies every time a validator falls below a effectiveness threshold
+* **Prometheus**:
+  * Reports the online/offline status of each validator
+  * Reports the effectiveness of each validator
+  * Reports many relevant metrics, like error counts, request, performance metrics, etc
 
 > Inspired by https://github.com/uijin/eth2-validator-monitor
 
@@ -59,7 +70,7 @@ telegram: null
 #   access_token: "your-access-token"
 #   chat_id: -1000000000
 
-# Expose Prometheus metrics (you need to also enable them in the config)
+# Expose Prometheus metrics
 prometheus: null
 # prometheus:
 #   port: 8000
@@ -104,10 +115,28 @@ docker-compose up
 
 ## Telegram notifications
 In order to setup Telegram notifications, you will need to:
-- Create a bot using Botfather, write down the access token (needed in the config)
+- Create a bot using [Botfather](https://core.telegram.org/bots#3-how-do-i-create-a-bot), write down the access token (needed in the config)
 - Create a channel in telgram
 - Add the bot to the channel
-- Use any of these methods to get the chat-id: <https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id>
+- Use any of these methods to [get the chat_id](https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id)
+
+Once you have the `access_token` and `chat_id` you just add them in the configuration file.
+
+```ini
+telegram:
+  access_token: "your-access-token"
+  chat_id: -11111111111111
+```
+
+## Prometheus
+In order to expose the prometheus metrics define the port in the config:
+
+```ini
+prometheus:
+  port: 8000
+```
+
+If you are running the monitor with **docker-compose**, remember to make sure you are exposing the same port.
 
 
 # Development

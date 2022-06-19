@@ -30,7 +30,7 @@ telegram: null
 #   access_token: "your-access-token"
 #   chat_id: -1000000000
 
-# Expose Prometheus metrics (you need to also enable them in the config)
+# Expose Prometheus metrics
 prometheus: null
 # prometheus:
 #   port: 8000
