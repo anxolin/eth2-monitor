@@ -38,13 +38,13 @@ bc_http_request_counter = Counter(
 )
 
 bc_http_request_success_counter = Counter(
-    PREFIX + "beaconchain_http_request_success_counter",
+    PREFIX + "beaconchain_http_request_success",
     "Number of successful GET request to the Beacon Chain REST API",
 )
 
 
 validator_effectiveness = Gauge(
-    "validator_effectiveness", "Validator efectiviness", ["index"]
+    "validator_effectiveness_percent", "Validator efectiviness", ["index"]
 )
 
 

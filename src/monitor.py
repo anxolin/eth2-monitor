@@ -75,38 +75,43 @@ class ValidatorMonitor:
             batch_request_delay=self.batch_request_delay,
         )
 
-        if self.notify_effectiveness_threshold is not None:
-            await self.__notify_effectiveness_changes(validators_effectiveness)
+        await self.__notify_effectiveness_changes(validators_effectiveness)
 
     async def __notify_effectiveness_changes(self, validators_effectiveness):
         validators_change_to_ok = []
         validators_change_to_ko = []
         min_effectiveness = 1
+        notify = self.notify_effectiveness_threshold is not None
 
         for validator_effectiveness in validators_effectiveness:
             index = str(validator_effectiveness["index"])
             effectiveness = validator_effectiveness["effectiveness"]
-            previous_effectiveness_ok = self.validators_effectiveness_ok.get(
-                index, True
-            )
-            effectiveness_ok = effectiveness > self.notify_effectiveness_threshold
-            # log.debug(
-            #     f"Validator {index} has effectiveness of {effectiveness} (effectiveness_ok={effectiveness_ok}, previous_effectiveness_ok={previous_effectiveness_ok})"
-            # )
+            prometheus.validator_effectiveness.labels(index=index).set(effectiveness)
 
-            if effectiveness_ok == previous_effectiveness_ok:
-                # No change in the effectiveness OK status
-                continue
+            if notify:
+                previous_effectiveness_ok = self.validators_effectiveness_ok.get(
+                    index, True
+                )
+                effectiveness_ok = effectiveness > self.notify_effectiveness_threshold
+                # log.debug(
+                #     f"Validator {index} has effectiveness of {effectiveness} (effectiveness_ok={effectiveness_ok}, previous_effectiveness_ok={previous_effectiveness_ok})"
+                # )
 
-            # Change the effectiveness status
-            self.validators_effectiveness_ok[index] = effectiveness_ok
-            validators_change = (
-                validators_change_to_ok if effectiveness_ok else validators_change_to_ko
-            )
-            validators_change.append(index)
+                if effectiveness_ok == previous_effectiveness_ok:
+                    # No change in the effectiveness OK status
+                    continue
 
-            # Keep track of the worst effectiveness
-            min_effectiveness = min(min_effectiveness, effectiveness)
+                # Change the effectiveness status
+                self.validators_effectiveness_ok[index] = effectiveness_ok
+                validators_change = (
+                    validators_change_to_ok
+                    if effectiveness_ok
+                    else validators_change_to_ko
+                )
+                validators_change.append(index)
+
+                # Keep track of the worst effectiveness
+                min_effectiveness = min(min_effectiveness, effectiveness)
 
         num_validators_change_to_ok = len(validators_change_to_ok)
         if num_validators_change_to_ok > 0:
