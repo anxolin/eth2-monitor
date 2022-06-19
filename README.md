@@ -50,7 +50,7 @@ check_health:
   #       - Notify after 15 failures, so it will notify after 15min failing
   #       - Notify after 60min
   #       - Notify after 24h (and every 24h from this moment)
-  error_count_notify_thresholds: [15, 60, 1440]
+  notify_error_count_thresholds: [15, 60, 1440]
 
   # Waiting time between health checks
   polling_wait: 60
@@ -126,6 +126,11 @@ Once you have the `access_token` and `chat_id` you just add them in the configur
 telegram:
   access_token: "your-access-token"
   chat_id: -11111111111111
+
+# If you want to receive notifications if the validatos fall below the threshold
+check_health:  
+  notify_effectiveness_threshold: 0.66
+  # ...
 ```
 
 ## Prometheus

@@ -18,7 +18,7 @@ error_count = 0
 
 
 # "check_health": {
-#     "error_count_notify_thresholds": [15, 60, 1440],
+#     "notify_error_count_thresholds": [15, 60, 1440],
 #     "polling_wait": 60,
 #     "batch_request_delay": 0.2,
 # },
@@ -37,10 +37,10 @@ async def main():
     notify_effectiveness_threshold = check_health_config.get(
         "notify_effectiveness_threshold", None
     )
-    error_count_notify_thresholds = check_health_config.get(
-        "error_count_notify_thresholds", [15, 60, 1440]
+    notify_error_count_thresholds = check_health_config.get(
+        "notify_error_count_thresholds", [15, 60, 1440]
     )
-    error_count_max_notify_threshold = error_count_notify_thresholds[-1]
+    error_count_max_notify_threshold = notify_error_count_thresholds[-1]
 
     # Config: Prometheus
     prometheus_config = utils.config.get("prometheus", None)
@@ -99,7 +99,7 @@ async def main():
             )
 
             if (
-                error_count in error_count_notify_thresholds
+                error_count in notify_error_count_thresholds
                 or error_count % error_count_max_notify_threshold == 0
             ):
                 try:

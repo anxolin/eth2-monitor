@@ -10,7 +10,7 @@ check_health:
   #       - Notify after 15 failures, so it will notify after 15min failing
   #       - Notify after 60min
   #       - Notify after 24h (and every 24h from this moment)
-  error_count_notify_thresholds: [15, 60, 1440]
+  notify_error_count_thresholds: [15, 60, 1440]
 
   # Waiting time between health checks
   polling_wait: 60
