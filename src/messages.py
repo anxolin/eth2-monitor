@@ -14,11 +14,11 @@ if telegram_config is not None:
     if access_token is not None and chat_id is not None:
         bot = telegram.Bot(token=access_token)
     else:
-        log.warn(
+        log.warning(
             'Telegram Notifications are disabled. Config the "telegram" requires both "access_token" and "chat_id"'
         )
 else:
-    log.warn(
+    log.warning(
         'Telegram Notifications are disabled. Config the "telegram" channel to enable them'
     )
     bot = None

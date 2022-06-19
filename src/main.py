@@ -49,9 +49,11 @@ async def main():
 
     # Get all the monitoring validators
     monitored_validators = validators.get_validators()
-    log.info(
-        "Monitoring %s validators: %s", len(monitored_validators), monitored_validators
-    )
+    validators_total = len(monitored_validators)
+
+    # Report the number of validators being monitored
+    prometheus.validators_total_gauge.set(validators_total)
+    log.info("Monitoring %s validators: %s", validators_total, monitored_validators)
     await messages.send_message(
         f"Will keep an 👀 on `{len(monitored_validators)}` validators"
     )
@@ -64,7 +66,7 @@ async def main():
         prometheus_port = prometheus_config.get("port", None)
         prometheus.start_http_server(prometheus_port)
     else:
-        log.warn(
+        log.warning(
             "Prometheus metrics won't be exposed. To expose them, add prometheus configuration"
         )
 
