@@ -8,6 +8,7 @@ import validators
 import messages
 import config
 import monitor
+import prometheus
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -33,7 +34,7 @@ error_count = 0
 async def main():
     global wait, error_count
 
-    # Config
+    # Config: Health check
     check_health_config = config.config.get("check_health", {})
     polling_wait = check_health_config.get("polling_wait", 60)
     batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
@@ -42,13 +43,16 @@ async def main():
     )
     error_count_max_notify_threshold = error_count_notify_thresholds[-1]
 
+    # Config: Prometheus
+    prometheus_config = config.config.get("prometheus", None)
+
+    # Greet
     user = await messages.get_user()
     log.info('[%s] ETH2 Monitor "%s" is up', user.username, user.first_name)
     await messages.send_message(f"☀️ Validator Monitor *RESTARTED*")
 
     # Get all the monitoring validators
     monitored_validators = validators.get_validators()
-
     log.info(
         "Monitoring %s validators: %s", len(monitored_validators), monitored_validators
     )
@@ -59,6 +63,16 @@ async def main():
         monitored_validators, batch_request_delay
     )
 
+    # Start Prometheus server
+    if prometheus_config is not None:
+        prometheus_port = prometheus_config.get("port", None)
+        prometheus.start_http_server(prometheus_port)
+    else:
+        log.warn(
+            "Prometheus metrics won't be exposed. To expose them, add prometheus configuration"
+        )
+
+    # Main loop
     while not exit.is_set():
         try:
             # Monitor validators
