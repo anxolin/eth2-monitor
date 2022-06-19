@@ -55,7 +55,7 @@ telegram: null
 #   access_token: "your-access-token"
 #   chat_id: -1000000000
 
-# Expose prometheus metrics
+# Expose Prometheus metrics (you need to also enable them in the config)
 prometheus: null
 # prometheus:
 #   port: 8000
@@ -81,6 +81,9 @@ version: "3.9"
 services:
   bot:
     image: anxolin/eth2-monitor:latest
+    ports:
+      # Expose Prometheus metrics (you need to also enable them in the config)
+      - "8000:8000"
     volumes:
       - ./config.yml:/app/config.yml
     restart: always
