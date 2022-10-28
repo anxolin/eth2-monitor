@@ -1,3 +1,4 @@
+import datetime
 import validators
 import messages
 import prometheus
@@ -17,13 +18,19 @@ class ValidatorMonitor:
     """
 
     def __init__(
-        self, monitored_validators, notify_effectiveness_threshold, batch_request_delay
+        self,
+        monitored_validators,
+        notify_effectiveness_threshold,
+        batch_request_delay,
+        notify_delay_seconds,
     ):
         self.monitored_validators = monitored_validators
         self.notify_effectiveness_threshold = notify_effectiveness_threshold
         self.validators_online = {}
         self.validators_effectiveness_ok = {}
         self.batch_request_delay = batch_request_delay
+        self.notify_delay_seconds = notify_delay_seconds
+        self.notify_delay_start_time = None
 
     @prometheus.check_time_summary.time()
     async def check(self):
@@ -50,25 +57,58 @@ class ValidatorMonitor:
                 # No change in the status from last check
                 continue
 
-            # Change the status for the validator
-            self.validators_online[index] = status
-
-            # Get the label for the new state
-            new_state = (
-                STATUS_LABELS[status] if status in STATUS_LABELS else status + "⁉️"
-            )
-            if new_state not in validators_change_state:
-                validators_change_state[new_state] = []
+            if status not in validators_change_state:
+                validators_change_state[status] = []
 
             # Append the validator the list of validator that changed to th
-            validators_change_state[new_state].append(index)
+            validators_change_state[status].append(index)
 
-        # Notify all the changes of state
-        for new_state, validators_index in validators_change_state.items():
-            message_base = (
-                f"{len(validators_index)} Validators changed to {new_state}: "
+        # Decide if we should notify right away, or wait a few seconds
+        notify = False
+        if len(validators_change_state):
+            # Some validators changed the state
+            if self.notify_delay_start_time is None:
+                # There's no prior notification being delayed. We wait before notifying
+                self.notify_delay_start_time = datetime.datetime.now()
+                log.info(
+                    f"Detected some validator state change. Waiting {self.notify_delay_seconds}s before notifying them"
+                )
+            else:
+                waiting_time = datetime.datetime.now() - self.notify_delay_start_time
+                remaining_time = (
+                    self.notify_delay_seconds - waiting_time.total_seconds()
+                )
+                if remaining_time >= 0:
+                    # We haven't waited enough, wait more!
+                    log.info(
+                        f"Waiting {remaining_time:.0f}s more before notifying validator changes. Waited for {waiting_time.total_seconds():.0f}s"
+                    )
+                else:
+                    # We waited enough! Notify and reset the delay
+                    log.info(f"Waited enough! The validator changes will be notified")
+                    notify = True
+                    self.notify_delay_start_time = None
+        else:
+            # Make sure there's no active waiting if there's no changes in the validator status (i.e. the validator might go back to previous state)
+            self.notify_delay_start_time = None
+
+        # Update state, and notify all the changes of state
+        for status, validators_index in validators_change_state.items():
+            if notify:
+                for index in validators_index:
+                    # Change the status for the validator (only when we are also notifying)
+                    self.validators_online[index] = status
+                # Reset the waiting time
+                self.notify_delay_start_time = None
+
+            # Notify validator changes
+            status_label = (
+                STATUS_LABELS[status] if status in STATUS_LABELS else status + "⁉️"
             )
-            await self.__notify_change(message_base, validators_index)
+            message_base = (
+                f"{len(validators_index)} Validators changed to {status_label}: "
+            )
+            await self.__notify_change(message_base, validators_index, notify)
 
     async def __check_effectiveness(self):
         log.debug("Check Effectiveness of Validators")
@@ -130,7 +170,7 @@ class ValidatorMonitor:
 
         num_validators_change_to_ko = len(validators_change_to_ko)
 
-    async def __notify_change(self, message_base, validators_list):
+    async def __notify_change(self, message_base, validators_list, notify):
         validators_str = ", ".join([str(index) for index in validators_list])
         validators_markdown = ", ".join(
             [
@@ -139,5 +179,12 @@ class ValidatorMonitor:
             ]
         )
 
-        log.info(message_base + validators_str)
-        await messages.send_message(message_base + validators_markdown)
+        log.info(
+            message_base + validators_str + ("" if notify else " (don't notify yet)")
+        )
+
+        if notify:
+            try:
+                await messages.send_message(message_base + validators_markdown)
+            except:
+                log.error("Error notifying change")

@@ -34,6 +34,7 @@ async def main():
     check_health_config = utils.config.get("check_health", {})
     polling_wait = check_health_config.get("polling_wait", 60)
     batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
+    notify_delay_seconds = check_health_config.get("notify_delay_seconds", 90)
     notify_effectiveness_threshold = check_health_config.get(
         "notify_effectiveness_threshold", None
     )
@@ -64,6 +65,7 @@ async def main():
         monitored_validators=monitored_validators,
         notify_effectiveness_threshold=notify_effectiveness_threshold,
         batch_request_delay=batch_request_delay,
+        notify_delay_seconds=notify_delay_seconds,
     )
 
     # Start Prometheus server

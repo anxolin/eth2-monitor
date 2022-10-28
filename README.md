@@ -62,6 +62,9 @@ check_health:
 
   # Delay between request of large lists (i.e. delay when quering validator states in batches)
   batch_request_delay: 0.2
+
+  # Notify validator state changes only after some seconds 
+  notify_delay_seconds: 90
   
 beacon_chain:
   # Ethereum
