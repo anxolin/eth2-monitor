@@ -161,12 +161,16 @@ class ValidatorMonitor:
         num_validators_change_to_ok = len(validators_change_to_ok)
         if num_validators_change_to_ok > 0:
             message_base = f"{num_validators_change_to_ok} Validators effectiveness changed to {EFFECTIVENESS_LABEL_OK}: "
-            await self.__notify_change(message_base, validators_change_to_ok)
+            await self.__notify_change(
+                message_base, validators_change_to_ok, notify=True
+            )
 
         num_validators_change_to_ko = len(validators_change_to_ko)
         if num_validators_change_to_ko > 0:
             message_base = f"{num_validators_change_to_ko} Validators effectiveness changed to {EFFECTIVENESS_LABEL_KO}: "
-            await self.__notify_change(message_base, validators_change_to_ko)
+            await self.__notify_change(
+                message_base, validators_change_to_ko, notify=True
+            )
 
         num_validators_change_to_ko = len(validators_change_to_ko)
 
