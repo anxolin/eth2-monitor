@@ -64,7 +64,7 @@ check_health:
   batch_request_delay: 0.2
 
   # Notify validator state changes only after some seconds 
-  notify_delay_seconds: 90
+  notify_delay_seconds: 300
   
 beacon_chain:
   # Ethereum

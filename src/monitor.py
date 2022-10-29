@@ -30,7 +30,9 @@ class ValidatorMonitor:
         self.validators_effectiveness_ok = {}
         self.batch_request_delay = batch_request_delay
         self.notify_delay_seconds = notify_delay_seconds
-        self.notify_delay_start_time = None
+
+        self.notify_delay_start_time_status = None
+        self.notify_delay_start_time_effectiveness = None
 
     @prometheus.check_time_summary.time()
     async def check(self):
@@ -67,14 +69,16 @@ class ValidatorMonitor:
         notify = False
         if len(validators_change_state):
             # Some validators changed the state
-            if self.notify_delay_start_time is None:
+            if self.notify_delay_start_time_status is None:
                 # There's no prior notification being delayed. We wait before notifying
-                self.notify_delay_start_time = datetime.datetime.now()
+                self.notify_delay_start_time_status = datetime.datetime.now()
                 log.info(
                     f"Detected some validator state change. Waiting {self.notify_delay_seconds}s before notifying them"
                 )
             else:
-                waiting_time = datetime.datetime.now() - self.notify_delay_start_time
+                waiting_time = (
+                    datetime.datetime.now() - self.notify_delay_start_time_status
+                )
                 remaining_time = (
                     self.notify_delay_seconds - waiting_time.total_seconds()
                 )
@@ -87,10 +91,10 @@ class ValidatorMonitor:
                     # We waited enough! Notify and reset the delay
                     log.info(f"Waited enough! The validator changes will be notified")
                     notify = True
-                    self.notify_delay_start_time = None
+                    self.notify_delay_start_time_status = None
         else:
             # Make sure there's no active waiting if there's no changes in the validator status (i.e. the validator might go back to previous state)
-            self.notify_delay_start_time = None
+            self.notify_delay_start_time_status = None
 
         # Update state, and notify all the changes of state
         for status, validators_index in validators_change_state.items():
@@ -99,7 +103,7 @@ class ValidatorMonitor:
                     # Change the status for the validator (only when we are also notifying)
                     self.validators_online[index] = status
                 # Reset the waiting time
-                self.notify_delay_start_time = None
+                self.notify_delay_start_time_status = None
 
             # Notify validator changes
             status_label = (
@@ -124,7 +128,7 @@ class ValidatorMonitor:
         validators_change_to_ok = []
         validators_change_to_ko = []
         min_effectiveness = 1
-        notify = self.notify_effectiveness_threshold is not None
+        check_effectiveness = self.notify_effectiveness_threshold is not None
 
         for validator_effectiveness in validators_effectiveness:
             index = str(validator_effectiveness["index"])
@@ -133,7 +137,7 @@ class ValidatorMonitor:
                 effectiveness
             )
 
-            if notify:
+            if check_effectiveness:
                 previous_effectiveness_ok = self.validators_effectiveness_ok.get(
                     index, True
                 )
@@ -146,8 +150,6 @@ class ValidatorMonitor:
                     # No change in the effectiveness OK status
                     continue
 
-                # Change the effectiveness status
-                self.validators_effectiveness_ok[index] = effectiveness_ok
                 validators_change = (
                     validators_change_to_ok
                     if effectiveness_ok
@@ -159,18 +161,59 @@ class ValidatorMonitor:
                 min_effectiveness = min(min_effectiveness, effectiveness)
 
         num_validators_change_to_ok = len(validators_change_to_ok)
+        num_validators_change_to_ko = len(validators_change_to_ko)
+
+        notify = False
+        if num_validators_change_to_ok + num_validators_change_to_ko > 0:
+            # Some validators their effectivess status
+            if self.notify_delay_start_time_effectiveness is None:
+                # There's no prior notification being delayed. We wait before notifying
+                self.notify_delay_start_time_effectiveness = datetime.datetime.now()
+                log.info(
+                    f"Detected some validator effectiveness change. Waiting {self.notify_delay_seconds}s before notifying them"
+                )
+            else:
+                waiting_time = (
+                    datetime.datetime.now() - self.notify_delay_start_time_effectiveness
+                )
+                remaining_time = (
+                    self.notify_delay_seconds - waiting_time.total_seconds()
+                )
+                if remaining_time >= 0:
+                    # We haven't waited enough, wait more!
+                    log.info(
+                        f"Waiting {remaining_time:.0f}s more before notifying validator effectiveness. Waited for {waiting_time.total_seconds():.0f}s"
+                    )
+                else:
+                    # We waited enough! Notify and reset the delay
+                    log.info(
+                        f"Waited enough! The validator effectiveness will be notified"
+                    )
+                    notify = True
+                    self.notify_delay_start_time_effectiveness = None
+        else:
+            # Make sure there's no active waiting if there's no changes in the validator status (i.e. the validator might go back to previous state)
+            self.notify_delay_start_time_effectiveness = None
+
+        if notify:
+            # Update the effectiveness from validators when notifying
+            for index in validators_change_to_ok + validators_change_to_ko:
+                validator = str(index)
+                # Change the effectiveness status
+                previous_effectiveness_status = self.validators_effectiveness_ok.get(
+                    validator, True
+                )
+                self.validators_effectiveness_ok[
+                    validator
+                ] = not previous_effectiveness_status
+
         if num_validators_change_to_ok > 0:
             message_base = f"{num_validators_change_to_ok} Validators effectiveness changed to {EFFECTIVENESS_LABEL_OK}: "
-            await self.__notify_change(
-                message_base, validators_change_to_ok, notify=True
-            )
+            await self.__notify_change(message_base, validators_change_to_ok, notify)
 
-        num_validators_change_to_ko = len(validators_change_to_ko)
         if num_validators_change_to_ko > 0:
-            message_base = f"{num_validators_change_to_ko} Validators effectiveness changed to {EFFECTIVENESS_LABEL_KO}: "
-            await self.__notify_change(
-                message_base, validators_change_to_ko, notify=True
-            )
+            message_base = f"{num_validators_change_to_ko} Validators effectiveness changed to{EFFECTIVENESS_LABEL_KO} (~{min_effectiveness:.2}%): "
+            await self.__notify_change(message_base, validators_change_to_ko, notify)
 
         num_validators_change_to_ko = len(validators_change_to_ko)
 
@@ -189,6 +232,12 @@ class ValidatorMonitor:
 
         if notify:
             try:
-                await messages.send_message(message_base + validators_markdown)
+                message_base_safe = (
+                    message_base.replace(".", "\.")
+                    .replace("(", "\(")
+                    .replace(")", "\)")
+                    .replace("~", "\~")
+                )
+                await messages.send_message(message_base_safe + validators_markdown)
             except:
                 log.error("Error notifying change")
