@@ -27,7 +27,7 @@ class MonitorStatus:
         self.batch_request_delay = batch_request_delay
         self.notify_delay_seconds = notify_delay_seconds
 
-        self.validators_waiting_to_notify = {"35529": datetime.datetime.now()}
+        self.validators_waiting_to_notify = {}
 
     async def check(self):
         log.debug("Check State of Validators")
@@ -111,11 +111,9 @@ class MonitorStatus:
             max_waiting_to_notify = now
             # Update the waiting time for validators that were not waiting before
             for index in validator_change_state_indexes:
-                waiting_to_notify = self.validators_waiting_to_notify[index]
-                if not waiting_to_notify:
-                    # Register the first time we observed this validator changing state
-                    waiting_to_notify = now
-                    self.validators_waiting_to_notify[index] = waiting_to_notify
+                # Register time (if not registered already)
+                waiting_to_notify = self.validators_waiting_to_notify.get(index, now)
+                self.validators_waiting_to_notify[index] = waiting_to_notify
 
                 # Calculate the validator waiting for longer
                 if max_waiting_to_notify > waiting_to_notify:
