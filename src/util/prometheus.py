@@ -5,7 +5,7 @@ from prometheus_client import (
     Gauge,
     Info,
 )
-import utils
+import util.utils as utils
 
 log = utils.getLog(__name__)
 

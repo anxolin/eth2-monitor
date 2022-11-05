@@ -1,9 +1,9 @@
 import requests
-import utils
+import util.utils as utils
 import time
 import traceback
 import backoff
-import prometheus
+import util.prometheus as prometheus
 
 # Config: Beacon chain base url
 base_url = utils.config.get("beacon_chain", {}).get(

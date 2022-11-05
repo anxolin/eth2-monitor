@@ -3,12 +3,12 @@ import signal
 from threading import Event
 import traceback
 
-import validators
-import messages
-import utils
-import monitor_status
-import monitor_effectiveness
-import prometheus
+import util.validators as validators
+import util.messages as messages
+import util.utils as utils
+import monitor.monitor_status as monitor_status
+import monitor.monitor_effectiveness as monitor_effectiveness
+import util.prometheus as prometheus
 
 log = utils.getLog(__name__)
 exit = Event()

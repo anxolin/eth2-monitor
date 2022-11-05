@@ -2,8 +2,8 @@ from os import access
 import backoff
 import telegram
 import asyncio
-import utils
-import validators
+import util.utils as utils
+import util.validators as validators
 
 log = utils.getLog(__name__)
 
