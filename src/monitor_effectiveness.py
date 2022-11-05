@@ -30,7 +30,7 @@ class MonitorEffectiveness:
         self.batch_request_delay = batch_request_delay
         self.notify_delay_seconds = notify_delay_seconds
 
-        self.notify_delay_start_time_effectiveness = None
+        self.notify_delay_start_time = None
         self.check_effectiveness_enabled = notify_effectiveness_threshold is not None
 
     def __get_effectiveness_changes(self, validators_effectiveness):
@@ -97,9 +97,9 @@ class MonitorEffectiveness:
 
         # Update the notification delay counter
         if start_delay_count:
-            self.notify_delay_start_time_effectiveness = datetime.datetime.now()
-        elif reset_delay_counter:
-            self.notify_delay_start_time_effectiveness = None
+            self.notify_delay_start_time = datetime.datetime.now()
+        elif reset_delay_counter or notify:
+            self.notify_delay_start_time = None
 
         # Update state, and notify all the changes of state
         await self.__update_validator_state_and_notify(
@@ -150,16 +150,14 @@ class MonitorEffectiveness:
         reset_delay_counter = False
         if num_validators_change_to_ok + num_validators_change_to_ko > 0:
             # Some validators their effectivess effectiveness
-            if self.notify_delay_start_time_effectiveness is None:
+            if self.notify_delay_start_time is None:
                 # There's no prior notification being delayed. We wait before notifying
                 log.info(
                     f"Detected some validator effectiveness change. Waiting {self.notify_delay_seconds}s before notifying them"
                 )
                 start_delay_count = True
             else:
-                waiting_time = (
-                    datetime.datetime.now() - self.notify_delay_start_time_effectiveness
-                )
+                waiting_time = datetime.datetime.now() - self.notify_delay_start_time
                 remaining_time = (
                     self.notify_delay_seconds - waiting_time.total_seconds()
                 )
@@ -177,7 +175,7 @@ class MonitorEffectiveness:
                     reset_delay_counter = True
         else:
             # Make sure there's no active waiting if there's no changes in the validator effectiveness (i.e. the validator might go back to previous state)
-            if self.notify_delay_start_time_effectiveness:
+            if self.notify_delay_start_time:
                 log.info(
                     f"✅ Validator Effectiveness went back to NORMAL. Reseting the notification timers!"
                 )
