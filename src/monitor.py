@@ -27,6 +27,7 @@ class ValidatorMonitor:
         self.monitored_validators = monitored_validators
         self.notify_effectiveness_threshold = notify_effectiveness_threshold
         self.validators_online = {}
+
         self.validators_effectiveness_ok = {}
         self.batch_request_delay = batch_request_delay
         self.notify_delay_seconds = notify_delay_seconds
@@ -85,16 +86,22 @@ class ValidatorMonitor:
                 if remaining_time >= 0:
                     # We haven't waited enough, wait more!
                     log.info(
-                        f"Waiting {remaining_time:.0f}s more before notifying validator changes. Waited for {waiting_time.total_seconds():.0f}s"
+                        f"⏱ Waiting {remaining_time:.0f}s more before notifying validator changes. Waited for {waiting_time.total_seconds():.0f}s"
                     )
                 else:
                     # We waited enough! Notify and reset the delay
-                    log.info(f"Waited enough! The validator changes will be notified")
+                    log.info(
+                        f"✉️ Waited enough! The validator changes will be notified"
+                    )
                     notify = True
                     self.notify_delay_start_time_status = None
         else:
             # Make sure there's no active waiting if there's no changes in the validator status (i.e. the validator might go back to previous state)
-            self.notify_delay_start_time_status = None
+            if self.notify_delay_start_time_status:
+                log.info(
+                    f"✅ Validator State went back to NORMAL. Reseting the notification timers!"
+                )
+                self.notify_delay_start_time_status = None
 
         # Update state, and notify all the changes of state
         for status, validators_index in validators_change_state.items():
@@ -102,8 +109,6 @@ class ValidatorMonitor:
                 for index in validators_index:
                     # Change the status for the validator (only when we are also notifying)
                     self.validators_online[index] = status
-                # Reset the waiting time
-                self.notify_delay_start_time_status = None
 
             # Notify validator changes
             status_label = (
@@ -182,18 +187,22 @@ class ValidatorMonitor:
                 if remaining_time >= 0:
                     # We haven't waited enough, wait more!
                     log.info(
-                        f"Waiting {remaining_time:.0f}s more before notifying validator effectiveness. Waited for {waiting_time.total_seconds():.0f}s"
+                        f"⏱ Waiting {remaining_time:.0f}s more before notifying validator effectiveness. Waited for {waiting_time.total_seconds():.0f}s"
                     )
                 else:
                     # We waited enough! Notify and reset the delay
                     log.info(
-                        f"Waited enough! The validator effectiveness will be notified"
+                        f"✉️ Waited enough! The validator effectiveness will be notified"
                     )
                     notify = True
                     self.notify_delay_start_time_effectiveness = None
         else:
             # Make sure there's no active waiting if there's no changes in the validator status (i.e. the validator might go back to previous state)
-            self.notify_delay_start_time_effectiveness = None
+            if self.notify_delay_start_time_effectiveness:
+                log.info(
+                    f"✅ Validator Effectiveness went back to NORMAL. Reseting the notification timers!"
+                )
+                self.notify_delay_start_time_effectiveness = None
 
         if notify:
             # Update the effectiveness from validators when notifying
