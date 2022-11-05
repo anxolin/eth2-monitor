@@ -6,7 +6,8 @@ import traceback
 import validators
 import messages
 import utils
-import monitor
+import monitor_status
+import monitor_effectiveness
 import prometheus
 
 log = utils.getLog(__name__)
@@ -25,6 +26,13 @@ error_count = 0
 # "beacon_chain": {"base_url: https://beacon.gnosischain.com"},
 # "telegram": None,
 # "validators": {"eth1_withdraw_account": None, "public_keys": []},
+
+
+@prometheus.check_time_summary.time()
+async def check(validator_monitor, validator_effectiveness):
+    # Monitor validators
+    await validator_monitor.check()
+    await validator_effectiveness.check()
 
 
 async def main():
@@ -61,7 +69,12 @@ async def main():
     await messages.send_message(
         f"Will keep an 👀 on `{len(monitored_validators)}` validators"
     )
-    validator_monitor = monitor.ValidatorMonitor(
+    validator_monitor = monitor_status.MonitorStatus(
+        monitored_validators=monitored_validators,
+        batch_request_delay=batch_request_delay,
+        notify_delay_seconds=notify_delay_seconds,
+    )
+    validator_effectiveness = monitor_effectiveness.MonitorEffectiveness(
         monitored_validators=monitored_validators,
         notify_effectiveness_threshold=notify_effectiveness_threshold,
         batch_request_delay=batch_request_delay,
@@ -88,8 +101,7 @@ async def main():
     # Main loop
     while not exit.is_set():
         try:
-            # Monitor validators
-            await validator_monitor.check()
+            await check(validator_monitor, validator_effectiveness)
             error_count = 0
         except Exception as e:
             # Log errors, and notify if the errors have been happening for some consecutive runs

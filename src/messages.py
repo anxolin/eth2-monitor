@@ -3,6 +3,7 @@ import backoff
 import telegram
 import asyncio
 import utils
+import validators
 
 log = utils.getLog(__name__)
 
@@ -46,6 +47,30 @@ async def get_user():
         return telegram.User(
             id=0, first_name="Mock Logger", username="MessageLogger", is_bot=False
         )
+
+
+async def send_message_validators(message_base, validators_list, notify):
+    validators_str = ", ".join([str(index) for index in validators_list])
+    validators_markdown = ", ".join(
+        [
+            "[" + str(index) + "](" + validators.get_validator_url(index) + ")"
+            for index in validators_list
+        ]
+    )
+
+    log.info(message_base + validators_str + ("" if notify else " (don't notify yet)"))
+
+    if notify:
+        try:
+            message_base_safe = (
+                message_base.replace(".", "\.")
+                .replace("(", "\(")
+                .replace(")", "\)")
+                .replace("~", "\~")
+            )
+            await send_message(message_base_safe + validators_markdown)
+        except:
+            log.error("Error notifying change")
 
 
 async def main():
