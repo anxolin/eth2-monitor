@@ -26,7 +26,7 @@ def get_bot():
         log.warning(
             'Telegram Notifications are disabled. Config the "telegram" channel to enable them'
         )
-    return None
+    return [None, None]
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=10)
