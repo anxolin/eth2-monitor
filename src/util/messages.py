@@ -16,6 +16,9 @@ def get_bot():
     if telegram_config is not None:
         access_token = telegram_config.get("access_token", None)
         chat_id = telegram_config["chat_id"]
+        log.debug(
+            f"Connect to Telegram. chat_id: {chat_id}, access_token={access_token[:4]}...{access_token[-4:]}"
+        )
         if access_token is not None and chat_id is not None:
             return chat_id, telegram.Bot(token=access_token)
         else:
