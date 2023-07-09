@@ -3,7 +3,7 @@ check_health:
   # notify_effectiveness_threshold: null
   notify_effectiveness_threshold: 0.66
 
-  # It will notify when the check fails by this numnber of times in a row. The highest will define the periodicity 
+  # It will notify when the check fails by this numnber of times in a row. The highest will define the periodicity
   # after that number is reached
   #
   #   i.e  [15, 60, 1440], and assuming a polling_wait of 60 seconds
@@ -18,14 +18,14 @@ check_health:
   # Delay between request of large lists (i.e. delay when quering validator states in batches)
   batch_request_delay: 0.2
 
-  # Notify validator state changes only after some seconds 
+  # Notify validator state changes only after some seconds
   notify_delay_seconds: 300
 
 beacon_chain:
   # Ethereum
   base_url: https://beaconcha.in
   # Gnosis Chain
-  #base_url: https://beacon.gnosischain.com
+  #base_url: https://gnosischa.in
 
 # Telegram notifications (Disabled by default, see README on how to set it up)
 telegram: null

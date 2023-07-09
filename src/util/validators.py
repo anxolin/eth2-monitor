@@ -6,9 +6,7 @@ import backoff
 import util.prometheus as prometheus
 
 # Config: Beacon chain base url
-base_url = utils.config.get("beacon_chain", {}).get(
-    "base_url", "https://beacon.gnosischain.com"
-)
+base_url = utils.config.get("beacon_chain", {}).get("base_url", "https://gnosischa.in")
 
 log = utils.getLog(__name__)
 

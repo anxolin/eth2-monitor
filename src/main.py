@@ -23,7 +23,7 @@ error_count = 0
 #     "polling_wait": 60,
 #     "batch_request_delay": 0.2,
 # },
-# "beacon_chain": {"base_url: https://beacon.gnosischain.com"},
+# "beacon_chain": {"base_url: https://gnosischa.in"},
 # "telegram": None,
 # "validators": {"eth1_withdraw_account": None, "public_keys": []},
 
