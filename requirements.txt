@@ -1,4 +1,4 @@
-PyYAML==6.0
+PyYAML==6.0.1
 requests==2.28.0
 python-telegram-bot==20.0a1
 backoff==2.1.2
