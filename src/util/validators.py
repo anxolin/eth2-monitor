@@ -107,15 +107,20 @@ def get_validators_effectiveness(validators, batch_request_delay=0.2):
         validators_param = ",".join([str(index) for index in batch])
         try:
             # Get the status for the validators
+            # i.e https://gnosischa.in/api/v1/validator/30000/attestationeffectiveness
             res_json = get_json(
                 f"/validator/{validators_param}/attestationeffectiveness"
             )
 
             for data in res_json["data"]:
                 index = data["validatorindex"]
-                effectiveness = data["attestation_effectiveness"]
-                # log.debug("Validator %s effectiveness is %s", index, effectiveness)
 
+                # Get the effectiveness.
+                #   - TODO: Re-visit how to get the effectivenes. The API changed, and now they report "attestation_efficiency" instead of "attestation_effectiveness", which has a different values and meaning. For now, i return this value as if it was effectivesss, but this needs to be reviewed
+                effectiveness = data["attestation_efficiency"]
+                # effectiveness = data["attestation_effectiveness"]
+
+                # log.debug("Validator %s effectiveness is %s", index, effectiveness)
                 result.append({"index": index, "effectiveness": effectiveness})
 
             # Prevent rate limits

@@ -67,6 +67,11 @@ class MonitorStatus(Monitor):
         for validator_state in validators_state:
             index = validator_state["index"]
             status = validator_state["status"]
+
+            # Recently status passed from being an enum with the status, to be an array where the position 1 is the enum
+            if isinstance(status, list) and len(status) > 2:
+                status = status[1]
+
             is_online = status == ONLINE_STATUS
             prometheus.validator_up_gauge.labels(index=index).set(is_online)
 
