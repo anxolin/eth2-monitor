@@ -123,7 +123,7 @@ async def main():
         try:
             await check(validator_monitor, validator_effectiveness)
             error_count = 0
-            #last_success = datetime.datetime.now()
+            last_success = datetime.datetime.now()
         except Exception as e:
             # Log errors, and notify if the errors have been happening for some consecutive runs
             prometheus.main_loop_errors_counter.inc()
