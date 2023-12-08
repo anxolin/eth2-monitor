@@ -9,13 +9,18 @@ import util.utils as utils
 import monitor.monitor_status as monitor_status
 import monitor.monitor_effectiveness as monitor_effectiveness
 import util.prometheus as prometheus
+import datetime
+import sys
+
 
 log = utils.getLog(__name__)
-exit = Event()
+exit_event = Event()
 wait = None
 
 # State
+exit_code = 0
 error_count = 0
+last_success =  datetime.datetime.now()
 
 
 # "check_health": {
@@ -36,13 +41,14 @@ async def check(validator_monitor, validator_effectiveness):
 
 
 async def main():
-    global wait, error_count
-
+    global wait, error_count, last_success
+    
     # Config: Health check
     check_health_config = utils.config.get("check_health", {})
     polling_wait = check_health_config.get("polling_wait", 60)
     batch_request_delay = check_health_config.get("batch_request_delay", 0.2)
     notify_delay_seconds = check_health_config.get("notify_delay_seconds", 300)
+    watch_dog_kill_switch_minutes = check_health_config.get("watch_dog_kill_switch_minutes", 30)
     notify_effectiveness_threshold = check_health_config.get(
         "notify_effectiveness_threshold", None
     )
@@ -99,10 +105,11 @@ async def main():
         )
 
     # Main loop
-    while not exit.is_set():
+    while not exit_event.is_set():
         try:
             await check(validator_monitor, validator_effectiveness)
             error_count = 0
+            #last_success = datetime.datetime.now()
         except Exception as e:
             # Log errors, and notify if the errors have been happening for some consecutive runs
             prometheus.main_loop_errors_counter.inc()
@@ -112,6 +119,18 @@ async def main():
                 f"Error checking the state of validators (error_count={error_count}). Retrying in {polling_wait}s!"
             )
 
+            # Watchdog: NOTIFY and restart after 30 minutes of consecutive errors
+            if last_success < datetime.datetime.now() - datetime.timedelta(minutes=watch_dog_kill_switch_minutes):
+                watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {watch_dog_kill_switch_minutes} minutes ago\. Restarting\!"
+                log.error(watchdog_message)
+                try:
+                    await messages.send_message(watchdog_message)
+                except Exception as e2:
+                    log.error(traceback.format_exc())
+                    log.error("Nested error. Error sending the Error message")
+                exit_with_code(100)
+
+            # Notify if the error count is in the thresholds
             if (
                 error_count in notify_error_count_thresholds
                 or error_count % error_count_max_notify_threshold == 0
@@ -126,7 +145,7 @@ async def main():
         finally:
             prometheus.main_loop_consecutive_errors_gauge.set(error_count)
             log.debug(f"Next check in {polling_wait} seconds")
-            exit.wait(polling_wait)
+            exit_event.wait(polling_wait)
 
 
 async def say_goodbye():
@@ -135,10 +154,15 @@ async def say_goodbye():
         f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!"
     )
 
+def exit_with_code(code):
+    global exit_code
+    exit_code = code
+    exit_event.set()
+
 
 def stop(signal_number=None, _stack=None):
     log.info("Shutting down (Signal=%s)", signal_number)
-    exit.set()
+    exit_event.set()
 
 
 if __name__ == "__main__":
@@ -151,3 +175,5 @@ if __name__ == "__main__":
         pass
     finally:
         asyncio.run(say_goodbye())
+    if exit_code != 0:
+        sys.exit(exit_code)

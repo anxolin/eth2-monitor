@@ -12,6 +12,9 @@ check_health:
   #       - Notify after 24h (and every 24h from this moment)
   notify_error_count_thresholds: [15, 60, 1440]
 
+  # Kill app if there's no success after this number of minutes
+  watch_dog_kill_switch_minutes: 30
+
   # Waiting time between health checks
   polling_wait: 60
 
