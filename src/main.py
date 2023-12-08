@@ -117,6 +117,7 @@ async def main():
                 log.error(traceback.format_exc())
                 log.error("Nested error. Error sending the Error message")
             exit_with_code(100)
+            continue
             
         # Do another check
         try:
