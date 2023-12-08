@@ -109,7 +109,7 @@ async def main():
     while not exit_event.is_set():
         # Watchdog: NOTIFY and restart after 30 minutes of consecutive errors
         if last_success < datetime.datetime.now() - datetime.timedelta(minutes=watch_dog_kill_switch_minutes):
-            watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {str(0.watch_dog_kill_switch_minutes).replace('.', '/.')} minutes ago\. Restarting\!"
+            watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {str(watch_dog_kill_switch_minutes).replace('.', '/.')} minutes ago\. Restarting\!"
             log.error(watchdog_message)
             try:
                 await messages.send_message(watchdog_message)
