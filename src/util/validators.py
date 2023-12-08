@@ -35,9 +35,23 @@ def get_validators_from_public_keys(public_keys):
     validators = []
     for batch in utils.divide_list_in_batches(public_keys):
         public_keys_params = ",".join([hex(pub) for pub in batch])
-        res_json = get_json(f"/validator/{public_keys_params}")
+        api_url = f"/validator/{public_keys_params}"
+        res_json = get_json(api_url)
+
+        # Make sure res_json["data"] is an array
+        if "data" not in res_json or not isinstance(res_json["data"], list):
+            error_message = f'Expected an array for property "data" of GET /{api_url}. API JSON Result: {res_json}'
+            raise Exception(error_message)
+
+        # Make sure validators have a "validatorindex" property
+        validators_info = res_json["data"]
+        if "validatorindex" not in validators_info[0]: 
+            error_message = f'Expected an object with property "validatorindex" for the validator items return in "data" property of GET /{api_url}. API JSON Result: {res_json}'
+            error_message = f'Error getting validators status from API. The JSON result should contain a property "validatorindex" for each validator {validators_info[0]}'
+            raise Exception(error_message)
+
         validators_batch = [
-            validator["validatorindex"] for validator in res_json["data"]
+            validator["validatorindex"] for validator in validators_info
         ]
         validators += validators_batch
 
