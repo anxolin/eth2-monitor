@@ -20,7 +20,7 @@ wait = None
 # State
 exit_code = 0
 error_count = 0
-last_success =  datetime.datetime.now()
+last_success = None
 
 
 # "check_health": {
@@ -105,7 +105,20 @@ async def main():
         )
 
     # Main loop
+    last_success = datetime.datetime.now()
     while not exit_event.is_set():
+        # Watchdog: NOTIFY and restart after 30 minutes of consecutive errors
+        if last_success < datetime.datetime.now() - datetime.timedelta(minutes=watch_dog_kill_switch_minutes):
+            watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {watch_dog_kill_switch_minutes} minutes ago\. Restarting\!"
+            log.error(watchdog_message)
+            try:
+                await messages.send_message(watchdog_message)
+            except Exception as e2:
+                log.error(traceback.format_exc())
+                log.error("Nested error. Error sending the Error message")
+            exit_with_code(100)
+            
+        # Do another check
         try:
             await check(validator_monitor, validator_effectiveness)
             error_count = 0
@@ -118,17 +131,6 @@ async def main():
             log.error(
                 f"Error checking the state of validators (error_count={error_count}). Retrying in {polling_wait}s!"
             )
-
-            # Watchdog: NOTIFY and restart after 30 minutes of consecutive errors
-            if last_success < datetime.datetime.now() - datetime.timedelta(minutes=watch_dog_kill_switch_minutes):
-                watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {watch_dog_kill_switch_minutes} minutes ago\. Restarting\!"
-                log.error(watchdog_message)
-                try:
-                    await messages.send_message(watchdog_message)
-                except Exception as e2:
-                    log.error(traceback.format_exc())
-                    log.error("Nested error. Error sending the Error message")
-                exit_with_code(100)
 
             # Notify if the error count is in the thresholds
             if (
