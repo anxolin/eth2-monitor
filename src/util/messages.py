@@ -7,6 +7,8 @@ import util.validators as validators
 
 log = utils.getLog(__name__)
 
+SPECIAL_SYMBOLS = [".", "(", ")", "~", "!"]
+
 
 def get_bot():
     # Config
@@ -34,8 +36,11 @@ def get_bot():
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=10)
-async def send_message(message, parse_mode="MarkdownV2"):
+async def send_message(message, parse_mode="MarkdownV2", scape=False):
+    
     # https://core.telegram.org/bots/api#markdownv2-style
+    if scape:
+        message = scape_markdown(message)
     
     if bot is not None:
         async with bot:
@@ -58,14 +63,10 @@ async def get_user():
         )
 
 
+
+
 def scape_markdown(message):
-    return (
-        message
-        .replace(".", "\.")
-        .replace("(", "\(")
-        .replace(")", "\)")
-        .replace("~", "\~")
-    )
+    return utils.escape_special_symbols(message, SPECIAL_SYMBOLS)
 
 async def send_message_validators(message_base, validators_list, notify):
     validators_str = ", ".join([str(index) for index in validators_list])

@@ -30,5 +30,13 @@ def divide_list_in_batches(data, batch_size=BATCH_SIZE):
     for i in range(0, len(data), batch_size):
         yield data[i : i + batch_size]
 
+def format_decimal(value, decimals=10):
+    return f"{value:.{decimals}f}".rstrip('0').rstrip('.')
+
+def escape_special_symbols(input_string, special_symbols):
+    for symbol in special_symbols:
+        input_string = input_string.replace(symbol, "\\" + symbol)
+    return input_string
+
 
 config = getConfig()

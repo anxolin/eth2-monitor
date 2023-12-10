@@ -109,10 +109,11 @@ async def main():
     while not exit_event.is_set():
         # Watchdog: NOTIFY and restart after 30 minutes of consecutive errors
         if last_success < datetime.datetime.now() - datetime.timedelta(minutes=watch_dog_kill_switch_minutes):
-            watchdog_message = f"🐶 *WATCH DOG*\: Last success was more than {str(watch_dog_kill_switch_minutes).replace('.', '\.')} minutes ago\. Restarting\!"
+            minutes_scaped = utils.format_decimal(watch_dog_kill_switch_minutes)
+            watchdog_message = f"🐶 *WATCH DOG*: Last success was more than {minutes_scaped} minutes ago. Restarting!"
             log.error(watchdog_message)
             try:
-                await messages.send_message(watchdog_message)
+                await messages.send_message(watchdog_message, scape=True)
             except Exception as e2:
                 log.error(traceback.format_exc())
                 log.error("Nested error. Error sending the Error message")
@@ -140,7 +141,8 @@ async def main():
             ):
                 try:
                     await messages.send_message(
-                        f"🔥 *ERROR*: The check has been failing for `{error_count}` times in a row! Cause: {repr(e)}"
+                        f"🔥 *ERROR*: The check has been failing for `{error_count}` times in a row! Cause: {repr(e)}",
+                        scape=True
                     )
                 except Exception as e2:
                     log.error(traceback.format_exc())
@@ -154,7 +156,8 @@ async def main():
 async def say_goodbye():
     log.info("Have a good day Ser!")
     await messages.send_message(
-        f"💤 Validator Monitor *SHUTDOWN*\. Have a nice day Ser\!"
+        f"💤 Validator Monitor *SHUTDOWN*. Have a nice day Ser!",
+        scape=True
     )
 
 def exit_with_code(code):
@@ -180,3 +183,4 @@ if __name__ == "__main__":
         asyncio.run(say_goodbye())
     if exit_code != 0:
         sys.exit(exit_code)
+
