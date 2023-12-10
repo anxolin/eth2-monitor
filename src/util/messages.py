@@ -32,11 +32,17 @@ def get_bot():
     return [None, None]
 
 
+
 @backoff.on_exception(backoff.expo, Exception, max_tries=10)
 async def send_message(message, parse_mode="MarkdownV2"):
+    # https://core.telegram.org/bots/api#markdownv2-style
+    
     if bot is not None:
         async with bot:
-            await bot.send_message(chat_id=chat_id, text=message, parse_mode=parse_mode)
+            try:
+              await bot.send_message(chat_id=chat_id, text=message, parse_mode=parse_mode)
+            except telegram.error.BadRequest as error:
+              log.error(f"Error sending telegram message: {message}. BadRequest: {error.message}")
     else:
         log.info(f"[Message] {message}")
 
@@ -52,6 +58,15 @@ async def get_user():
         )
 
 
+def scape_markdown(message):
+    return (
+        message
+        .replace(".", "\.")
+        .replace("(", "\(")
+        .replace(")", "\)")
+        .replace("~", "\~")
+    )
+
 async def send_message_validators(message_base, validators_list, notify):
     validators_str = ", ".join([str(index) for index in validators_list])
     validators_markdown = ", ".join(
@@ -65,15 +80,12 @@ async def send_message_validators(message_base, validators_list, notify):
 
     if notify:
         try:
-            message_base_safe = (
-                message_base.replace(".", "\.")
-                .replace("(", "\(")
-                .replace(")", "\)")
-                .replace("~", "\~")
-            )
+            message_base_safe = scape_markdown(message_base)
             await send_message(message_base_safe + validators_markdown)
         except:
             log.error("Error notifying change")
+
+
 
 
 async def main():
