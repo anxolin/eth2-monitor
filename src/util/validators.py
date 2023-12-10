@@ -38,6 +38,15 @@ def get_validators_from_public_keys(public_keys):
         api_url = f"/validator/{public_keys_params}"
         res_json = get_json(api_url)
 
+        if len(batch) == 1:
+            # Handle edge case. The API returns an object instead of an array when there's only one validator
+            if "validatorindex" not in res_json["data"]: 
+              error_message = f'Expected an object with property "validatorindex" for for property "data" of GET /{api_url}. API JSON Result: {res_json}'
+              raise Exception(error_message)
+        
+            validators.append(res_json["data"]['validatorindex'])
+            continue
+
         # Make sure res_json["data"] is an array
         if "data" not in res_json or not isinstance(res_json["data"], list):
             error_message = f'Expected an array for property "data" of GET /{api_url}. API JSON Result: {res_json}'
@@ -47,7 +56,6 @@ def get_validators_from_public_keys(public_keys):
         validators_info = res_json["data"]
         if "validatorindex" not in validators_info[0]: 
             error_message = f'Expected an object with property "validatorindex" for the validator items return in "data" property of GET /{api_url}. API JSON Result: {res_json}'
-            error_message = f'Error getting validators status from API. The JSON result should contain a property "validatorindex" for each validator {validators_info[0]}'
             raise Exception(error_message)
 
         validators_batch = [
