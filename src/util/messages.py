@@ -4,6 +4,7 @@ import telegram
 import asyncio
 import util.utils as utils
 import util.validators as validators
+from itertools import islice
 
 log = utils.getLog(__name__)
 
@@ -69,6 +70,14 @@ def scape_markdown(message):
     return utils.escape_special_symbols(message, SPECIAL_SYMBOLS)
 
 async def send_message_validators(message_base, validators_list, notify):
+    if len(validators_str) <= 20:
+        validators_to_notify = validators_str
+        message_end = ""    
+    else:
+        validators_to_notify = islice(validators_str, 20)
+        message_end = f"...and {len(validators_list)} more."
+        
+
     validators_str = ", ".join([str(index) for index in validators_list])
     validators_markdown = ", ".join(
         [
@@ -82,7 +91,7 @@ async def send_message_validators(message_base, validators_list, notify):
     if notify:
         try:
             message_base_safe = scape_markdown(message_base)
-            await send_message(message_base_safe + validators_markdown)
+            await send_message(message_base_safe + validators_markdown + message_end)
         except:
             log.error("Error notifying change")
 
