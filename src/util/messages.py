@@ -74,7 +74,7 @@ async def send_message_validators(message_base, validators_list, notify):
         validators_to_notify = validators_str
         message_end = ""    
     else:
-        validators_to_notify = islice(validators_str, 20)
+        validators_to_notify = islice(validators_list, 20)
         message_end = f"...and {len(validators_list)} more."
         
 
