@@ -70,7 +70,7 @@ def scape_markdown(message):
     return utils.escape_special_symbols(message, SPECIAL_SYMBOLS)
 
 async def send_message_validators(message_base, validators_list, notify):
-    if len(validators_str) <= 20:
+    if len(validators_list) <= 20:
         validators_to_notify = validators_str
         message_end = ""    
     else:
