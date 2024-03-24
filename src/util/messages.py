@@ -71,7 +71,7 @@ def scape_markdown(message):
 
 async def send_message_validators(message_base, validators_list, notify):
     if len(validators_list) <= 20:
-        validators_to_notify = validators_str
+        validators_to_notify = validators_list
         message_end = ""    
     else:
         validators_to_notify = islice(validators_list, 20)
